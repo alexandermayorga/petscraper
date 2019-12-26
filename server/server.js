@@ -97,7 +97,9 @@ petLink.find({ domain: "aarfhouston.org" }, (err, petLinks) => {
 
 });
 
-
+app.get('/', (req, res) => {
+    res.send("Hello Pets!")
+})
 
 app.get('/search', (req, res) => {
     petLink.find({}, (err, docs) => {
