@@ -45,15 +45,18 @@ function getPetLinkList(HTMLbody) {
 }
 
 //Main Function
-function scrapePet(petLinks,cb){
+function scrapePets(petLinks,cb){
     // console.log("guau!");
     const pets = [];
+    let counter = 0;
 
     petLinks.forEach((pet,i,arr) => {
         fetchURL(pet.petURI).then(response => {
+            counter++;
             const $ = cheerio.load(response.data);
 
-            const content = $('#layoutMainContent');
+            if ($('#animalDetailsAbout').length < 1) { return }; //Checking that there is info in the page
+
             const petName = $('#layoutMainContent .pageCenterTitle').html().split("&apos;")[0];
             const breed = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[0].trim();
             const sex = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[2].trim();
@@ -69,15 +72,14 @@ function scrapePet(petLinks,cb){
                 // pics
             };
             pets.push(petData);
-            if(pets.length == arr.length) {
-                //console.log(pets)
-                return cb(pets);
-            };
+            if (counter == arr.length) return cb(pets);
         })
     })
+
+
 }
 
 module.exports = {
     scrapePetLinks,
-    scrapePet
+    scrapePets
 }

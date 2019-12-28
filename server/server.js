@@ -3,12 +3,12 @@ const express = require('express'); // Routing
 const mongoose = require('mongoose'); //Mongoose - DB util
 const CronJob = require('cron').CronJob;
 
-new CronJob('0 */30 * * * *', function () {
-    const d = new Date();
-    console.log('Every 30 minutes:', d);
-    aarfhoustonScrapeLinks();
-    aarfhoustonScrapePets();
-}, null, true, 'America/Chicago');
+// new CronJob('0 */30 * * * *', function () {
+//     const d = new Date();
+//     console.log('Every 30 minutes:', d);
+//     aarfhoustonScrapeLinks();
+//     aarfhoustonScrapePets();
+// }, null, true, 'America/Chicago');
 
 //Scrapers
 const scraper_aarfhouston = require('./scraper-aarfhouston');
@@ -50,22 +50,21 @@ function aarfhoustonScrapeLinks() {
                         console.log("New link Added to Database:");
                         console.log(doc);
                     })
-                }
-                else {
-                    console.log("Link already in Database! Update it!")
+                }else{
+                    console.log('No new Links to add!');
                 }
             });
         }); //EOF loop
-        //check for more pages
     })
 }
-function aarfhoustonScrapePets(params) {
+
+function aarfhoustonScrapePets() {
     console.log("Start: Method aarfhoustonScrapePets");
     petLink.find({ domain: "aarfhouston.org" }, (err, petLinks) => {
         if (err) return console.log(err);
 
-        scraper_aarfhouston.scrapePet(petLinks,(pets)=>{
-            if (pets) console.log('We got ',pets.length,' pets');
+        scraper_aarfhouston.scrapePets(petLinks,(pets)=>{
+            //if (pets) console.log('We got ',pets.length,' pets');
 
             pets.forEach(pet => { //loop
                 const petObj = new petModel({
@@ -82,7 +81,6 @@ function aarfhoustonScrapePets(params) {
                 petModel.find({ petId: pet.petId }, (err, docs) => {
                     if (err) return console.log(err);
                     if (docs.length<1) {
-                        
                         //console.log("Pet Not Found! Lets add it")
                         petObj.save((err, doc) => {
                             if (err) return console.log(err);
@@ -91,13 +89,29 @@ function aarfhoustonScrapePets(params) {
                         })
                     }
                     else {
-                        console.log("Pet already in Database! Update it!")
+                        
+                        petModel.findOneAndUpdate(
+                            {petId: pet.petId},
+                            {
+                                $set: {
+                                    name: pet.petName,
+                                    breed: pet.breed,
+                                    age: pet.age,
+                                    sex: pet.sex
+                                }
+                            },
+                            {
+                                new: true
+                            },
+                            (err, doc) => {
+                                if (err) return console.log(err);
+                                console.log("Pet Updated:", pet.petId);
+                            })
                     }
                 });
             }); //EOF loop
         });
     });
-
 }
 
 app.get('/', (req, res) => {
@@ -115,6 +129,8 @@ app.get('/search', (req, res) => {
     });
 })
 
+aarfhoustonScrapeLinks();
+aarfhoustonScrapePets();
 
 //Start Server
 app.listen(config.PORT, () => {
