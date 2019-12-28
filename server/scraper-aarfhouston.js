@@ -13,8 +13,8 @@ function scrapePetLinks(cb) {
 }
 
 //Fetch the data: gets the HTML of the provided URI
-function fetchURL(petListURI){
-    return axios.get(petListURI);
+function fetchURL(URI){
+    return axios.get(URI);
 }
 
 //Returns array of pet objects 

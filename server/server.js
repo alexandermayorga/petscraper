@@ -19,7 +19,7 @@ const app = express(); // Express App
 
 //DB Config
 mongoose.Promise = global.Promise;
-mongoose.connect(config.DATABASE);
+mongoose.connect(config.DATABASE, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
 
 //DB Models
 const { petModel } = require('./models/pet');
@@ -33,6 +33,8 @@ app.use(express.static(__dirname + './../public/'))
 
 function aarfhoustonScrapeLinks() {
     console.log("Start: Method aarfhoustonScrapeLinks");
+    const counter = 0;
+
     scraper_aarfhouston.scrapePetLinks((petList) => {
         petList.forEach(pet => { //loop
             const petLinkObj = new petLink({
@@ -40,26 +42,34 @@ function aarfhoustonScrapeLinks() {
                 petURI: pet.petURI,
                 domain: pet.domain
             })
-
             petLink.find({ petId:pet.petId }, (err, docs) => {
                 if (err) return console.log(err);
                 if (!(docs.length > 0)) {
-                    //console.log("Doc Not Found! Lets add it")
                     petLinkObj.save((err, doc) => {
                         if (err) return console.log(err);
                         console.log("New link Added to Database:");
                         console.log(doc);
+                        counter++;
                     })
-                }else{
-                    console.log('No new Links to add!');
                 }
             });
         }); //EOF loop
+
+        counter == 0 ? console.log("No New Links Found") : console.log(`Added ${counter} New Links`);
+
+        //Link Maintenance
+        petLink.find({}, (err, docs) => {
+            if (err) return console.log(err);
+            linkMaintenance(petList, docs,"aarfhouston.com");
+        });
+
     })
 }
 
 function aarfhoustonScrapePets() {
     console.log("Start: Method aarfhoustonScrapePets");
+    let counterNew = 0;
+    let counterUpdate = 0;
     petLink.find({ domain: "aarfhouston.org" }, (err, petLinks) => {
         if (err) return console.log(err);
 
@@ -86,10 +96,10 @@ function aarfhoustonScrapePets() {
                             if (err) return console.log(err);
                             console.log("New pet Added to Database:");
                             console.log(doc);
+                            counter++;
                         })
                     }
                     else {
-                        
                         petModel.findOneAndUpdate(
                             {petId: pet.petId},
                             {
@@ -97,7 +107,8 @@ function aarfhoustonScrapePets() {
                                     name: pet.petName,
                                     breed: pet.breed,
                                     age: pet.age,
-                                    sex: pet.sex
+                                    sex: pet.sex,
+                                    status: "Active"
                                 }
                             },
                             {
@@ -105,13 +116,62 @@ function aarfhoustonScrapePets() {
                             },
                             (err, doc) => {
                                 if (err) return console.log(err);
-                                console.log("Pet Updated:", pet.petId);
+                                //console.log("Pet Updated:", pet.petId);
                             })
                     }
                 });
             }); //EOF loop
+
+            counterNew == 0 ? console.log("No New Pets Found") : console.log(`Added ${counterNew} New Pets`);
+            counterUpdate == 0 ? console.log("No Pets Updated") : console.log(`Updated ${counterUpdate} Pets`);
+
         });
     });
+}
+
+function linkMaintenance(scrapeList, dbList, domain) {
+    console.log("Link Maintenance for:",domain);
+    //let counterInactive = 0;
+
+    const scrapeIds = [];
+    scrapeList.forEach(scrapeLink => { scrapeIds.push(scrapeLink.petId)})
+    
+    dbList.forEach(dbLink => {
+        if (scrapeIds.indexOf(dbLink.petId) < 0 && dbLink.status == "Active") {
+            petLink.findOneAndUpdate(
+                { petId: dbLink.petId },
+                {
+                    $set: {
+                        status: "Inactive"
+                    }
+                },
+                {
+                    new: true
+                },
+                (err, doc) => {
+                    if (err) return console.log(err);
+                    console.log("Setting to inactive:", doc.petId);
+                    //counterInactive++;
+                })
+        } 
+        // else {
+        //     petLink.findOneAndUpdate(
+        //         { petId: dbLink.petId },
+        //         {
+        //             $set: {
+        //                 status: "Active"
+        //             }
+        //         },
+        //         {
+        //             new: true
+        //         },
+        //         (err, doc) => {
+        //             if (err) return console.log(err);
+        //             console.log(doc);
+        //         })
+        // }
+    })
+    //counterInactive != 0 ? console.log(`Updated ${counterInactive} records`) : console.log("All links up to date");
 }
 
 app.get('/', (req, res) => {
@@ -129,8 +189,8 @@ app.get('/search', (req, res) => {
     });
 })
 
-// aarfhoustonScrapeLinks();
-// aarfhoustonScrapePets();
+aarfhoustonScrapeLinks();
+aarfhoustonScrapePets();
 
 //Start Server
 app.listen(config.PORT, () => {

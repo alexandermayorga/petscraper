@@ -32,6 +32,11 @@ const petSchema = mongoose.Schema({
     img: {
         type: String,
         trim: true
+    },
+    status: {
+        type: String,
+        required: true,
+        default: "Active"
     }
 }, { timestamps: true });
 
