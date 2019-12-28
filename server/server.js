@@ -3,12 +3,12 @@ const express = require('express'); // Routing
 const mongoose = require('mongoose'); //Mongoose - DB util
 const CronJob = require('cron').CronJob;
 
-// new CronJob('0 */30 * * * *', function () {
-//     const d = new Date();
-//     console.log('Every 30 minutes:', d);
-//     aarfhoustonScrapeLinks();
-//     aarfhoustonScrapePets();
-// }, null, true, 'America/Chicago');
+new CronJob('0 */30 * * * *', function () {
+    const d = new Date();
+    console.log('Every 30 minutes:', d);
+    aarfhoustonScrapeLinks();
+    aarfhoustonScrapePets();
+}, null, true, 'America/Chicago');
 
 //Scrapers
 const scraper_aarfhouston = require('./scraper-aarfhouston');
@@ -129,8 +129,8 @@ app.get('/search', (req, res) => {
     });
 })
 
-aarfhoustonScrapeLinks();
-aarfhoustonScrapePets();
+// aarfhoustonScrapeLinks();
+// aarfhoustonScrapePets();
 
 //Start Server
 app.listen(config.PORT, () => {
