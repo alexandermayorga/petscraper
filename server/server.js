@@ -8,10 +8,12 @@ new CronJob('0 */30 * * * *', function () {
     console.log('Every 30 minutes:', d);
     aarfhoustonScrapeLinks();
     aarfhoustonScrapePets();
+    houstonspcaScrapeLinks();
 }, null, true, 'America/Chicago');
 
 //Scrapers
 const scraper_aarfhouston = require('./scraper-aarfhouston');
+const scraper_houstonspca = require('./scraper-houstonspca');
 
 //App Config
 const config = require('./config/config').get(process.env.NODE_ENV)
@@ -19,7 +21,11 @@ const app = express(); // Express App
 
 //DB Config
 mongoose.Promise = global.Promise;
-mongoose.connect(config.DATABASE, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
+mongoose.connect(config.DATABASE, { 
+    useNewUrlParser: true, 
+    useUnifiedTopology: true, 
+    useFindAndModify: false 
+});
 
 //DB Models
 const { petModel } = require('./models/pet');
@@ -33,7 +39,7 @@ app.use(express.static(__dirname + './../public/'))
 
 function aarfhoustonScrapeLinks() {
     console.log("Start: Method aarfhoustonScrapeLinks");
-    const counter = 0;
+    let counter = 0;
 
     scraper_aarfhouston.scrapePetLinks((petList) => {
         petList.forEach(pet => { //loop
@@ -60,7 +66,7 @@ function aarfhoustonScrapeLinks() {
         //Link Maintenance
         petLink.find({}, (err, docs) => {
             if (err) return console.log(err);
-            linkMaintenance(petList, docs,"aarfhouston.com");
+            linkMaintenance(petList, docs,"aarfhouston.org");
         });
 
     })
@@ -129,6 +135,42 @@ function aarfhoustonScrapePets() {
     });
 }
 
+
+function houstonspcaScrapeLinks() {
+    console.log("Start: Method houstonspcaScrapeLinks");
+    let counter = 0;
+
+    scraper_houstonspca.scrapePetLinks((petList) => {
+        petList.forEach(pet => { //loop
+            const petLinkObj = new petLink({
+                petId: pet.petId,
+                petURI: pet.petURI,
+                domain: pet.domain
+            })
+            petLink.find({ petId: pet.petId }, (err, docs) => {
+                if (err) return console.log(err);
+                if (!(docs.length > 0)) {
+                    petLinkObj.save((err, doc) => {
+                        if (err) return console.log(err);
+                        console.log("New link Added to Database:");
+                        console.log(doc);
+                        counter++;
+                    })
+                }
+            });
+        }); //EOF loop
+
+        counter == 0 ? console.log("No New Links Found") : console.log(`Added ${counter} New Links`);
+
+        //Link Maintenance
+        petLink.find({ domain: "houstonspca.org"}, (err, docs) => {
+            if (err) return console.log(err);
+            if (docs.length > 0) linkMaintenance(petList, docs, "houstonspca.org");
+        });
+
+    })
+}
+
 function linkMaintenance(scrapeList, dbList, domain) {
     console.log("Link Maintenance for:",domain);
     //let counterInactive = 0;
@@ -189,8 +231,8 @@ app.get('/search', (req, res) => {
     });
 })
 
-aarfhoustonScrapeLinks();
-aarfhoustonScrapePets();
+// aarfhoustonScrapeLinks();
+// aarfhoustonScrapePets();
 
 //Start Server
 app.listen(config.PORT, () => {
