@@ -33,7 +33,7 @@ function scrapePetLinks(cb, URI = petListURI,cheerioArr = [], count = 1) {
 //scrapePetLinks((pets) => console.log('Pets from scrapePetLinks',pets));
 
 //Fetch the data: gets the HTML of the provided URI
-function fetchURL(URI, nextPage = false){
+function fetchURL(URI){
     return axios.get(URI);
 }
 
