@@ -2,24 +2,44 @@ const axios = require('axios').default;
 const cheerio = require('cheerio');
 
 const domain = 'houstonspca.org';
-const petListURI = `https://www.${domain}/adopt/available-pets/?type=Dog`;
+const petListURI = `https://www.${domain}/adopt/available-pets/?type=Dog&pets-page=`;
 
-//Main Function
-function scrapePetLinks(cb) {
-    fetchURL(petListURI).then(response => {
-        petList = [...getPetLinkList(response.data)];
-        return cb(petList);
+//Main Function - Returns an array[objects] with scrapable links
+
+function scrapePetLinks(cb, URI = petListURI,cheerioArr = [], count = 1) {
+    //console.log('Page:', count);
+    cheerioArr = [...cheerioArr];
+    fetchURL(URI).then(response => {
+        const $ = cheerio.load(response.data);
+        //console.log('pets found: ' + $('.card__grid .pet-card').length)
+        if ($('.card__grid .pet-card').length > 0) {
+            cheerioArr.push($);
+            scrapePetLinks(cb, `${URI}${count + 1}`, cheerioArr, count + 1)
+        } else {
+            //console.log('Done Checking Next Pages!')
+            //console.log(cheerioArr);
+
+            // cheerioArr.reduce(function (total, currentValue, currentIndex, arr) { }, initialValue)
+            const petList = cheerioArr.reduce((sum, cheerioObj) => {
+                total = [...sum, ...getPetLinkList(cheerioObj, 'cheerio')];
+                return total;
+            }, []);
+
+            return cb(petList);
+
+        }
     })
 }
+//scrapePetLinks((pets) => console.log('Pets from scrapePetLinks',pets));
 
 //Fetch the data: gets the HTML of the provided URI
-function fetchURL(URI){
+function fetchURL(URI, nextPage = false){
     return axios.get(URI);
 }
 
 //Returns array of pet objects 
-function getPetLinkList(HTMLbody) {
-    const $ = cheerio.load(HTMLbody);
+function getPetLinkList(HTMLbody, bodyFormat = 'html') {
+    const $ = (bodyFormat != "cheerio" ? cheerio.load(HTMLbody) : HTMLbody );
 
     const list = $('#main .pets__grid');
     const pets = [];
@@ -30,19 +50,15 @@ function getPetLinkList(HTMLbody) {
         // if (petId.indexOf('?')) petId = petId.split('?')[0]; // just in case they add any other params in the URL
 
         const pet = {
-            petURI: `https://www.aarfhouston.org${petURI}`,
+            petURI: `https://www.${domain}${petURI}`,
             domain,
             petId
-            // ,
-            // name: $(row).find('td').eq(0).text().trim(),
-            // breed: $(row).find('td').eq(1).text().trim(),
-            // sex: $(row).find('td').eq(2).text().trim(),
-            // img: $(row).find('td').eq(3).find('img').attr('src')
         }
         pets.push(pet);
     })
     return pets;
 }
+
 
 //Main Function
 function scrapePets(petLinks,cb){
@@ -77,10 +93,6 @@ function scrapePets(petLinks,cb){
     })
 
 
-}
-
-function checkNextPage(){
-    //gets next pages
 }
 
 module.exports = {
