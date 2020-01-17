@@ -6,15 +6,16 @@ const petListURI = `https://www.${domain}/adopt/available-pets/?type=Dog&pets-pa
 
 //Main Function - Returns an array[objects] with scrapable links
 
-function scrapePetLinks(cb, URI = petListURI,cheerioArr = [], count = 1) {
-    //console.log('Page:', count);
+function scrapePetLinks(cb, URI = petListURI,cheerioArr = [], page = 1) {
+    // console.log("Search Page:", `${URI}${page}`);
+    // console.log('Page:', page);
     cheerioArr = [...cheerioArr];
-    fetchURL(URI).then(response => {
+    fetchURL(`${URI}${page}`).then(response => {
         const $ = cheerio.load(response.data);
-        //console.log('pets found: ' + $('.card__grid .pet-card').length)
-        if ($('.card__grid .pet-card').length > 0) {
+        if ($('.card__grid .pet-card').length > 0) { //Check for pets in search page
             cheerioArr.push($);
-            scrapePetLinks(cb, `${URI}${count + 1}`, cheerioArr, count + 1)
+            page++;
+            scrapePetLinks(cb, URI, cheerioArr, page)
         } else {
             //console.log('Done Checking Next Pages!')
             //console.log(cheerioArr);
@@ -48,7 +49,6 @@ function getPetLinkList(HTMLbody, bodyFormat = 'html') {
         const petURI = $(card).attr('href');
         let petId = petURI.split('pet=')[1];
         // if (petId.indexOf('?')) petId = petId.split('?')[0]; // just in case they add any other params in the URL
-
         const pet = {
             petURI: `https://www.${domain}${petURI}`,
             domain,

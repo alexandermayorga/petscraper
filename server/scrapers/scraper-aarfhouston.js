@@ -55,7 +55,7 @@ function scrapePets(petLinks,cb){
             counter++;
             const $ = cheerio.load(response.data);
 
-            if ($('#animalDetailsAbout').length < 1) { return }; //Checking that there is info in the page
+            if ($('#animalDetailsAbout').length < 1) { return pets.push({ petURI: pet.petURI, status:"Inactive"});}; //Checking that there is info in the page
 
             const petName = $('#layoutMainContent .pageCenterTitle').html().split("&apos;")[0];
             const breed = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[0].trim();
@@ -67,8 +67,7 @@ function scrapePets(petLinks,cb){
                 breed,
                 sex,
                 age,
-                petId: pet.petId,
-                petURI: pet.petURI,
+                petId: pet.petId
                 // pics
             };
             pets.push(petData);
