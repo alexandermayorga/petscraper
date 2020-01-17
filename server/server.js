@@ -12,8 +12,8 @@ new CronJob('0 */30 * * * *', function () {
 }, null, true, 'America/Chicago');
 
 //Scrapers
-const scraper_aarfhouston = require('./scraper-aarfhouston');
-const scraper_houstonspca = require('./scraper-houstonspca');
+const scraper_aarfhouston = require('./scrapers/scraper-aarfhouston');
+const scraper_houstonspca = require('./scrapers/scraper-houstonspca');
 
 //App Config
 const config = require('./config/config').get(process.env.NODE_ENV)
@@ -28,8 +28,7 @@ mongoose.connect(config.DATABASE, {
 });
 
 //DB Models
-const { petModel } = require('./models/pet');
-const { petLink } = require('./models/pet_link');
+const { Pet } = require('./models/pet');
 
 
 //Get Static Files
@@ -39,181 +38,106 @@ app.use(express.static(__dirname + './../public/'))
 
 function aarfhoustonScrapeLinks() {
     console.log("Start: Method aarfhoustonScrapeLinks");
-    let counter = 0;
 
     scraper_aarfhouston.scrapePetLinks((petList) => {
         petList.forEach(pet => { //loop
-            const petLinkObj = new petLink({
+            const petLinkObj = new Pet({
                 petId: pet.petId,
                 petURI: pet.petURI,
                 domain: pet.domain
             })
-            petLink.find({ petId:pet.petId }, (err, docs) => {
+            Pet.find({ petId: pet.petId, domain: pet.domain }, (err, docs) => {
                 if (err) return console.log(err);
-                if (!(docs.length > 0)) {
+                if (docs.length < 1) {
                     petLinkObj.save((err, doc) => {
                         if (err) return console.log(err);
-                        console.log("New link Added to Database:");
-                        console.log(doc);
-                        counter++;
+                        console.log("New link Added to Database:", doc.petId);
                     })
                 }
             });
         }); //EOF loop
-
-        counter == 0 ? console.log("No New Links Found") : console.log(`Added ${counter} New Links`);
-
-        //Link Maintenance
-        petLink.find({}, (err, docs) => {
-            if (err) return console.log(err);
-            linkMaintenance(petList, docs,"aarfhouston.org");
-        });
 
     })
 }
 
 function aarfhoustonScrapePets() {
     console.log("Start: Method aarfhoustonScrapePets");
-    let counterNew = 0;
     let counterUpdate = 0;
-    petLink.find({ domain: "aarfhouston.org" }, (err, petLinks) => {
+    Pet.find({ domain: "aarfhouston.org", status: "Active" }, (err, petLinks) => {
         if (err) return console.log(err);
 
-        scraper_aarfhouston.scrapePets(petLinks,(pets)=>{
-            //if (pets) console.log('We got ',pets.length,' pets');
+        scraper_aarfhouston.scrapePets(petLinks, (pets) => {
+            // if (pets) console.log('We got ', pets.length, ' pets');
+            // if (pets) console.log(pets);
 
             pets.forEach(pet => { //loop
-                const petObj = new petModel({
-                    petId: pet.petId,
-                    petURI: pet.petURI,
-                    name: pet.petName,
-                    breed: pet.breed,
-                    age: pet.age,
-                    sex: pet.sex
-                })
-                // console.log(pet);
-                // console.log(petObj);
-
-                petModel.find({ petId: pet.petId }, (err, docs) => {
-                    if (err) return console.log(err);
-                    if (docs.length<1) {
-                        //console.log("Pet Not Found! Lets add it")
-                        petObj.save((err, doc) => {
+                if("status" in pet){
+                    Pet.findOneAndUpdate(
+                        { petURI: pet.petURI },
+                        {
+                            $set: {
+                                status: "Inactive"
+                            }
+                        },
+                        (err, pet) => {
                             if (err) return console.log(err);
-                            console.log("New pet Added to Database:");
-                            console.log(doc);
-                            counter++;
-                        })
+                            console.log("Pet Inactive:", pet.petId);
+                        }
+                    ) 
+                }else{
+                    const petObj = {
+                        name: pet.petName,
+                        breed: pet.breed,
+                        age: pet.age,
+                        sex: pet.sex
                     }
-                    else {
-                        petModel.findOneAndUpdate(
-                            {petId: pet.petId},
-                            {
-                                $set: {
-                                    name: pet.petName,
-                                    breed: pet.breed,
-                                    age: pet.age,
-                                    sex: pet.sex,
-                                    status: "Active"
-                                }
-                            },
-                            {
-                                new: true
-                            },
-                            (err, doc) => {
-                                if (err) return console.log(err);
-                                //console.log("Pet Updated:", pet.petId);
-                            })
-                    }
-                });
+                    // console.log(pet);
+                    // console.log(petObj);
+                    Pet.findOneAndUpdate(
+                        { petId: pet.petId },
+                        {
+                            $set: {
+                                name: pet.petName,
+                                breed: pet.breed,
+                                age: pet.age,
+                                sex: pet.sex
+                            }
+                        },
+                        (err, pet) => {
+                            if (err) return console.log(err);
+                            console.log("Pet Updated:", pet.petId);
+                        }
+                    ) 
+                }
             }); //EOF loop
 
-            counterNew == 0 ? console.log("No New Pets Found") : console.log(`Added ${counterNew} New Pets`);
-            counterUpdate == 0 ? console.log("No Pets Updated") : console.log(`Updated ${counterUpdate} Pets`);
-
         });
-    });
+    }).select('petURI petId');
 }
-
 
 function houstonspcaScrapeLinks() {
     console.log("Start: Method houstonspcaScrapeLinks");
     let counter = 0;
 
     scraper_houstonspca.scrapePetLinks((petList) => {
-        petList.forEach(pet => { //loop
-            const petLinkObj = new petLink({
+        console.log("petList Length:",petList.length)
+        petList.forEach((pet,i) => { //loop
+            const petLinkObj = new Pet({
                 petId: pet.petId,
-                petURI: pet.petURI,
-                domain: pet.domain
+                domain: pet.domain,
+                petURI: pet.petURI
             })
-            petLink.find({ petId: pet.petId }, (err, docs) => {
+            Pet.find({ petId: pet.petId, domain: pet.domain }, (err, docs) => {
                 if (err) return console.log(err);
-                if (!(docs.length > 0)) {
+                if(docs.length < 1){
                     petLinkObj.save((err, doc) => {
                         if (err) return console.log(err);
-                        console.log("New link Added to Database:");
-                        console.log(doc);
-                        counter++;
+                        console.log("New Pet link Added to Database:", doc.petId);
                     })
                 }
             });
         }); //EOF loop
-
-        counter == 0 ? console.log("No New Links Found") : console.log(`Added ${counter} New Links`);
-
-        //Link Maintenance
-        petLink.find({ domain: "houstonspca.org"}, (err, docs) => {
-            if (err) return console.log(err);
-            if (docs.length > 0) linkMaintenance(petList, docs, "houstonspca.org");
-        });
-
     })
-}
-
-function linkMaintenance(scrapeList, dbList, domain) {
-    console.log("Link Maintenance for:",domain);
-    //let counterInactive = 0;
-
-    const scrapeIds = [];
-    scrapeList.forEach(scrapeLink => { scrapeIds.push(scrapeLink.petId)})
-    
-    dbList.forEach(dbLink => {
-        if (scrapeIds.indexOf(dbLink.petId) < 0 && dbLink.status == "Active") {
-            petLink.findOneAndUpdate(
-                { petId: dbLink.petId },
-                {
-                    $set: {
-                        status: "Inactive"
-                    }
-                },
-                {
-                    new: true
-                },
-                (err, doc) => {
-                    if (err) return console.log(err);
-                    console.log("Setting to inactive:", doc.petId);
-                    //counterInactive++;
-                })
-        } 
-        // else {
-        //     petLink.findOneAndUpdate(
-        //         { petId: dbLink.petId },
-        //         {
-        //             $set: {
-        //                 status: "Active"
-        //             }
-        //         },
-        //         {
-        //             new: true
-        //         },
-        //         (err, doc) => {
-        //             if (err) return console.log(err);
-        //             console.log(doc);
-        //         })
-        // }
-    })
-    //counterInactive != 0 ? console.log(`Updated ${counterInactive} records`) : console.log("All links up to date");
 }
 
 app.get('/', (req, res) => {
@@ -221,7 +145,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/search', (req, res) => {
-    petLink.find({}, (err, docs) => {
+    Pet.find({status:"Active"}, (err, docs) => {
         if (err) return console.log(err);
         if (docs.length > 0) {
             res.send(docs)
@@ -231,9 +155,9 @@ app.get('/search', (req, res) => {
     });
 })
 
-// aarfhoustonScrapeLinks();
-// aarfhoustonScrapePets();
-// houstonspcaScrapeLinks();
+//aarfhoustonScrapeLinks();
+//aarfhoustonScrapePets();
+//houstonspcaScrapeLinks();
 
 //Start Server
 app.listen(config.PORT, () => {
