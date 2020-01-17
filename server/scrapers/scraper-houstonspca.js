@@ -62,7 +62,6 @@ function getPetLinkList(HTMLbody, bodyFormat = 'html') {
 
 //Main Function
 function scrapePets(petLinks,cb){
-    // console.log("guau!");
     const pets = [];
     let counter = 0;
 
@@ -71,20 +70,33 @@ function scrapePets(petLinks,cb){
             counter++;
             const $ = cheerio.load(response.data);
 
-            if ($('#animalDetailsAbout').length < 1) { return }; //Checking that there is info in the page
+            if ($('.img-s__content-col').length < 1) { return pets.push({ petURI: pet.petURI, status: "Inactive" }); }; //Checking that there is info in the page
 
-            const petName = $('#layoutMainContent .pageCenterTitle').html().split("&apos;")[0];
-            const breed = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[0].trim();
-            const sex = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[2].trim();
-            const age = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[4].trim();
+            const petName = $('.img-s__content-col .title').text();
+            let breed = "";
+            let sex = "";
+            let age = "";
+
+            const petFeatures = $('.img-s__content-col .pet__feature > div');
+
+            petFeatures.each((i,feat)=>{
+                if ($(feat).text().indexOf('Breed:') >= 0) {
+                    breed = $(feat).text().split('Breed:')[1].trim();
+                }
+                if ($(feat).text().indexOf('Sex:') >= 0) {
+                    sex = $(feat).text().split('Sex:')[1].trim();
+                }
+                if ($(feat).text().indexOf('Age:') >= 0) {
+                    age = $(feat).text().split('Age:')[1].trim();
+                }
+            })
 
             const petData = {
                 petName,
                 breed,
                 sex,
                 age,
-                petId: pet.petId,
-                petURI: pet.petURI,
+                petId: pet.petId
                 // pics
             };
             pets.push(petData);

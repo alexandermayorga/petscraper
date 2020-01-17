@@ -9,6 +9,7 @@ new CronJob('0 */30 * * * *', function () {
     aarfhoustonScrapeLinks();
     aarfhoustonScrapePets();
     houstonspcaScrapeLinks();
+    houstonspcaScrapePets();
 }, null, true, 'America/Chicago');
 
 //Scrapers
@@ -62,7 +63,6 @@ function aarfhoustonScrapeLinks() {
 
 function aarfhoustonScrapePets() {
     console.log("Start: Method aarfhoustonScrapePets");
-    let counterUpdate = 0;
     Pet.find({ domain: "aarfhouston.org", status: "Active" }, (err, petLinks) => {
         if (err) return console.log(err);
 
@@ -85,14 +85,6 @@ function aarfhoustonScrapePets() {
                         }
                     ) 
                 }else{
-                    const petObj = {
-                        name: pet.petName,
-                        breed: pet.breed,
-                        age: pet.age,
-                        sex: pet.sex
-                    }
-                    // console.log(pet);
-                    // console.log(petObj);
                     Pet.findOneAndUpdate(
                         { petId: pet.petId },
                         {
@@ -140,6 +132,54 @@ function houstonspcaScrapeLinks() {
     })
 }
 
+function houstonspcaScrapePets() {
+    console.log("Start: Method aarfhoustonScrapePets");
+    Pet.find({ domain: "houstonspca.org", status: "Active" }, (err, petLinks) => {
+        if (err) return console.log(err);
+
+
+        scraper_houstonspca.scrapePets(petLinks, (pets) => {
+            //if (pets) console.log('We got ', pets.length, ' pets');
+            //if (pets) console.log(pets);
+
+            pets.forEach(pet => { //loop
+                if ("status" in pet) {
+                    Pet.findOneAndUpdate(
+                        { petURI: pet.petURI },
+                        {
+                            $set: {
+                                status: "Inactive"
+                            }
+                        },
+                        (err, pet) => {
+                            if (err) return console.log(err);
+                            console.log("Pet Inactive:", pet.petId);
+                        }
+                    )
+                } else {
+                    Pet.findOneAndUpdate(
+                        { petId: pet.petId },
+                        {
+                            $set: {
+                                name: pet.petName,
+                                breed: pet.breed,
+                                age: pet.age,
+                                sex: pet.sex
+                            }
+                        },
+                        (err, pet) => {
+                            if (err) return console.log(err);
+                            console.log("Pet Updated:", pet.petId);
+                        }
+                    )
+                }
+            }); //EOF loop
+
+        });
+    }).select('petURI petId');
+}
+
+
 app.get('/', (req, res) => {
     res.send("Hello Pets!")
 })
@@ -158,6 +198,7 @@ app.get('/search', (req, res) => {
 //aarfhoustonScrapeLinks();
 //aarfhoustonScrapePets();
 //houstonspcaScrapeLinks();
+// houstonspcaScrapePets();
 
 //Start Server
 app.listen(config.PORT, () => {
