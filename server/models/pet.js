@@ -7,6 +7,11 @@ const petSchema = mongoose.Schema({
         required: true,
         trim: true
     },
+    domain: {
+        type: String,
+        required: true,
+        trim: true
+    },
     petURI: {
         type: String,
         required: true,
@@ -14,7 +19,6 @@ const petSchema = mongoose.Schema({
     },
     name: {
         type: String,
-        required: true,
         trim: true
     },
     breed: {
@@ -40,7 +44,7 @@ const petSchema = mongoose.Schema({
     }
 }, { timestamps: true });
 
-const petModel = mongoose.model('petModel', petSchema);
+const Pet = mongoose.model('Pet', petSchema);
 
 //Export the model
-module.exports = { petModel }
+module.exports = { Pet }
