@@ -1,7 +1,11 @@
-//Express Basic Template
+const fs = require('fs');
+const https = require('https');
+const path = require('path');
 const express = require('express'); // Routing
 const mongoose = require('mongoose'); //Mongoose - DB util
 const CronJob = require('cron').CronJob;
+
+const mediaPath = path.normalize(`${__dirname}/../public/media/`);
 
 new CronJob('0 */30 * * * *', function () {
     const d = new Date();
@@ -30,7 +34,6 @@ mongoose.connect(config.DATABASE, {
 
 //DB Models
 const { Pet } = require('./models/pet');
-
 
 //Get Static Files
 app.use(express.static(__dirname + './../public/'))
@@ -63,7 +66,9 @@ function aarfhoustonScrapeLinks() {
 
 function aarfhoustonScrapePets() {
     console.log("Start: Method aarfhoustonScrapePets");
-    Pet.find({ domain: "aarfhouston.org", status: "Active" }, (err, petLinks) => {
+    const domain = "aarfhouston.org";
+
+    Pet.find({ domain: domain, status: "Active" }, (err, petLinks) => {
         if (err) return console.log(err);
 
         scraper_aarfhouston.scrapePets(petLinks, (pets) => {
@@ -95,8 +100,17 @@ function aarfhoustonScrapePets() {
                                 sex: pet.sex
                             }
                         },
-                        (err, pet) => {
+                        (err, doc) => {
                             if (err) return console.log(err);
+
+                            //Get Images
+                            const petImgPath = `${mediaPath}${domain}/${pet.petId}`;
+
+                            //check if folder exists
+                            //if folder does not exist => create and download imgs
+                            //else => download only new images
+                            getPetImages(petImgPath,pet.imgsURI);
+
                             console.log("Pet Updated:", pet.petId);
                         }
                     ) 
@@ -140,7 +154,7 @@ function houstonspcaScrapePets() {
 
         scraper_houstonspca.scrapePets(petLinks, (pets) => {
             //if (pets) console.log('We got ', pets.length, ' pets');
-            //if (pets) console.log(pets);
+            // if (pets) console.log(pets);
 
             pets.forEach(pet => { //loop
                 if ("status" in pet) {
@@ -196,9 +210,79 @@ app.get('/search', (req, res) => {
 })
 
 //aarfhoustonScrapeLinks();
-//aarfhoustonScrapePets();
-//houstonspcaScrapeLinks();
+// aarfhoustonScrapePets();
+// houstonspcaScrapeLinks();
 // houstonspcaScrapePets();
+
+function getPetImages(petImgPath, petURIs){
+    fs.access(petImgPath, (err) => {
+        if (err) {
+            //This is a new Pet. Create new Folder and download all imgs
+            fs.mkdir(petImgPath, { recursive: true }, (err) => {
+                if (err) throw err;
+                petURIs.forEach((uri) => {
+                    downloadImg(uri, petImgPath);
+                })
+            });
+        } else { //Pet has been Previously Scraped.
+            //check for new Images
+            petURIs.forEach((uri) => {
+                const filename = path.basename(uri);
+                fs.access(`${petImgPath}/${filename}`, (err) => {
+                    //Check if we have this img. If Not => Download it
+                    if (err) {
+                        downloadImg(uri, petImgPath);
+                    }
+                })
+            })
+        }
+    })
+}
+
+function downloadImg(url,petFolder){
+    console.log('Downloading...', petFolder);
+    // const ext = path.extname(url);
+    const filename = path.basename(url);
+    const localPath = `${petFolder}/${filename}`;
+
+    //Save image from External URL.
+    https.get(url, function (res) {
+        //Validation
+        const { statusCode } = res;
+        const contentType = res.headers['content-type'];
+
+        let error;
+        if (statusCode !== 200) {
+            error = new Error('Request Failed.\n' +
+                `Status Code: ${statusCode}`);
+        } 
+        else if (!/^image\/(jpeg|png)/.test(contentType)) {
+            error = new Error('Invalid content-type.\n' +
+                `Expected 'image/jpeg' OR 'image/png' but received '${contentType}'`);
+        }
+        //image/jpeg | image/png
+        if (error) {
+            console.error(error.message);
+            // consume response data to free up memory
+            res.resume();
+            return;
+        }
+
+        const file = fs.createWriteStream(localPath);
+        res.pipe(file, { end: false });
+        res.on('end', () => {
+            file.end(); //can do callback here if needed
+        });
+
+    }).on('error', (e) => {
+        console.error(e);
+    });
+
+}
+
+
+
+
 
 //Start Server
 app.listen(config.PORT, () => {

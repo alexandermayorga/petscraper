@@ -61,14 +61,19 @@ function scrapePets(petLinks,cb){
             const breed = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[0].trim();
             const sex = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[2].trim();
             const age = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[4].trim();
+            const imgsURI = [$('#animalMainImage').attr('src')];
+            
+            $('a[rel="prettyPhoto[pp_gal]"]').each((i,elem)=>{
+                imgsURI.push($(elem).attr('href'));
+            })
 
             const petData = {
                 petName,
                 breed,
                 sex,
                 age,
+                imgsURI,
                 petId: pet.petId
-                // pics
             };
             pets.push(petData);
             if (counter == arr.length) return cb(pets);
