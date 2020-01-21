@@ -61,12 +61,17 @@ function scrapePets(petLinks,cb){
             const breed = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[0].trim();
             const sex = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[2].trim();
             const age = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[4].trim();
-            const imgsURI = [$('#animalMainImage').attr('src')];
+            const imgsURI = [];
+            if (!(typeof ($('#animalMainImage').attr('src')) == "undefined")){
+                //Only push Active Pets with images
+                imgsURI.push($('#animalMainImage').attr('src'));
+                if ($('a[rel="prettyPhoto[pp_gal]"]').length > 0){
+                    $('a[rel="prettyPhoto[pp_gal]"]').each((i, elem) => {
+                        imgsURI.push($(elem).attr('href'));
+                    })
+                }
+            }
             
-            $('a[rel="prettyPhoto[pp_gal]"]').each((i,elem)=>{
-                imgsURI.push($(elem).attr('href'));
-            })
-
             const petData = {
                 petName,
                 breed,

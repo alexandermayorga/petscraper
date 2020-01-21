@@ -2,6 +2,7 @@ const fs = require('fs');
 const https = require('https');
 const path = require('path');
 const express = require('express'); // Routing
+const hbs = require('express-handlebars'); //Templating Engine
 const mongoose = require('mongoose'); //Mongoose - DB util
 const CronJob = require('cron').CronJob;
 
@@ -37,6 +38,16 @@ const { Pet } = require('./models/pet');
 
 //Get Static Files
 app.use(express.static(__dirname + './../public/'))
+
+//// ############# HBS SETUP ############# ////
+app.engine('hbs', hbs({
+    extname: 'hbs',
+    defaultLayout: 'main',
+    layoutsDir: __dirname + './../views/layouts',
+    partialsDir: __dirname + './../views/partials'
+}));
+app.set('view engine', 'hbs');
+//// ############# HBS SETUP ############# ////
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +120,7 @@ function aarfhoustonScrapePets() {
                             //check if folder exists
                             //if folder does not exist => create and download imgs
                             //else => download only new images
-                            getPetImages(petImgPath,pet.imgsURI);
+                            if (pet.imgsURI.length > 0) getPetImages(petImgPath,pet.imgsURI);
 
                             console.log("Pet Updated:", pet.petId);
                         }
@@ -195,7 +206,12 @@ function houstonspcaScrapePets() {
 
 
 app.get('/', (req, res) => {
-    res.send("Hello Pets!")
+    Pet.find({ status: "Active" }).sort({ _id: 'asc' }).limit(30).exec((err, docs) => {
+        if (err) return res.status(400).send(err);
+        res.render('home', {
+            pets: hbsWorkAround(docs)
+        });
+    })
 })
 
 app.get('/search', (req, res) => {
@@ -209,19 +225,41 @@ app.get('/search', (req, res) => {
     });
 })
 
-//aarfhoustonScrapeLinks();
-// aarfhoustonScrapePets();
+// aarfhoustonScrapeLinks();
+aarfhoustonScrapePets();
 // houstonspcaScrapeLinks();
 // houstonspcaScrapePets();
 
+//This is a workaround the security issue: 
+/*
+    Handlebars: Access has been denied to resolve the property "id" because it is not an "own property" of its parent.
+    You can add a runtime option to disable the check or this warning:
+    See https://handlebarsjs.com/api-reference/runtime-options.html#options-to-control-prototype-access for details
+*/
+function hbsWorkAround(docs) {
+    const arr = docs.map(document => {
+        const obj = {};
+        for (let key in document) {
+            obj[key] = document[key];
+        }
+        return obj;
+    })
+    return arr;
+}
+
 function getPetImages(petImgPath, petURIs){
+    if (petURIs.length < 1) {
+        let error = new Error('petURIs Array was empty');
+        console.error(error.message);
+        return;
+    }
     fs.access(petImgPath, (err) => {
         if (err) {
             //This is a new Pet. Create new Folder and download all imgs
             fs.mkdir(petImgPath, { recursive: true }, (err) => {
                 if (err) throw err;
                 petURIs.forEach((uri) => {
-                    downloadImg(uri, petImgPath);
+                    return downloadImg(uri, petImgPath);
                 })
             });
         } else { //Pet has been Previously Scraped.
@@ -231,7 +269,7 @@ function getPetImages(petImgPath, petURIs){
                 fs.access(`${petImgPath}/${filename}`, (err) => {
                     //Check if we have this img. If Not => Download it
                     if (err) {
-                        downloadImg(uri, petImgPath);
+                        return downloadImg(uri, petImgPath);
                     }
                 })
             })
