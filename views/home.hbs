@@ -1,0 +1,38 @@
+<div class="container wrapper">
+    <div class="row">
+        <h1 class="col-sm-12 text-center">Pets</h1>
+    </div>
+    <div class="row">
+        {{#each pets}}
+        <div class="col-sm-3">
+            <div id="pet-{{this.id}}">
+                <div class="petName">{{this.name}}</div>
+                <div class="petBreed">{{this.breed}}</div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>
+{{!-- <div class="container wrapper">
+    {{#each articles}}
+    <a href="/games/{{this._id}}">
+        <div class="item">
+            <div class="top">
+                <div class="title">{{this.title}}</div>
+            </div>
+            <div class="content">
+                {{this.review}}
+            </div>
+            <div class="bottom">
+                <div class="rating">
+                    <span>Rating:</span>{{this.rating}}/10
+                </div>
+            </div>
+        </div>
+    </a>
+    {{/each}}
+
+    <a href="/dashboard">
+        <div class="pull-right">Admin -></div>
+    </a>
+</div> --}}
