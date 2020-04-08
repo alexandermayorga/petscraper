@@ -102,7 +102,7 @@ function aarfhoustonScrapePets() {
                     ) 
                 }else{
                     Pet.findOneAndUpdate(
-                        { petId: pet.petId },
+                        { petId: pet.petId, domain: domain },
                         {
                             $set: {
                                 name: pet.petName,
@@ -113,16 +113,34 @@ function aarfhoustonScrapePets() {
                         },
                         (err, doc) => {
                             if (err) return console.log(err);
-
+                            console.log("Pet Updated:", pet.petId);
+                            
                             //Get Images
                             const petImgPath = `${mediaPath}${domain}/${pet.petId}`;
 
                             //check if folder exists
                             //if folder does not exist => create and download imgs
                             //else => download only new images
-                            if (pet.imgsURI.length > 0) getPetImages(petImgPath,pet.imgsURI);
-
-                            console.log("Pet Updated:", pet.petId);
+                            if (pet.imgsURI.length > 0) downloadPetImages(petImgPath,pet.imgsURI,(filenames)=>{
+                                console.log("filenames:",filenames);
+                                let imgFileNames = [];
+                                if ("imgs" in doc) {
+                                    imgFileNames = [...doc.imgs,...filenames];
+                                }else{
+                                    imgFileNames = [...filenames];
+                                }
+                                Pet.findOneAndUpdate(
+                                    { petId: pet.petId, domain: domain },
+                                    {
+                                        $set: {
+                                            imgs: imgFileNames
+                                        }
+                                    },
+                                    (err, doc) => {
+                                        if (err) return console.log(err);
+                                        console.log("Images Updated for:", pet.petId);
+                                    })
+                            });
                         }
                     ) 
                 }
@@ -206,19 +224,63 @@ function houstonspcaScrapePets() {
 
 
 app.get('/', (req, res) => {
-    Pet.find({ status: "Active" }).sort({ _id: 'asc' }).limit(30).exec((err, docs) => {
+
+    Pet.count({ status: "Active" }).exec((err, itemsCount) => {
         if (err) return res.status(400).send(err);
-        res.render('home', {
-            pets: hbsWorkAround(docs)
-        });
+
+        Pet.find({ status: "Active" }).sort({ _id: 'asc' }).limit(30).exec((err, docs) => {
+            if (err) return res.status(400).send(err);
+
+            const pets = arrayShuffle(hbsWorkAround(docs));
+
+            //console.log(pets[4]);
+            res.render('home-masonry', {
+                pets,
+                page: 1,
+                itemsCount,
+                pageSize: 30 
+                // helpers: {
+                //     cardControl: function (index,options) {
+                //         return index % 3 === 0 ? options.fn(this) : '';
+                //     }
+                // }
+            });
+        })
     })
+})
+app.get('/:page', (req, res) => {
+    const skip = req.params.page < 1 ? 0 : (req.params.page - 1) * 30;
+    const page = req.params.page < 1 ? 0 : req.params.page;
+    Pet.countDocuments({ status: "Active" }).exec((err, itemsCount )=>{
+        if (err) return res.status(400).send(err);
+        
+        Pet.find({ status: "Active" }).sort({ _id: 'asc' }).skip(skip).limit(30).exec((err, docs) => {
+            if (err) return res.status(400).send(err);
+
+            if (docs.length == 0) {
+                res.redirect('/')
+            }
+            else {
+                const pets = arrayShuffle(hbsWorkAround(docs));
+
+                res.render('home-masonry', {
+                    pets,
+                    page,
+                    itemsCount,
+                    pageSize: 30                    
+                });
+            }
+        })
+    })
+
+
 })
 
 app.get('/search', (req, res) => {
     Pet.find({status:"Active"}, (err, docs) => {
         if (err) return console.log(err);
         if (docs.length > 0) {
-            res.send(docs)
+            res.send(docs);
         } else {
             res.send('No Documents found')
         }
@@ -226,9 +288,9 @@ app.get('/search', (req, res) => {
 })
 
 // aarfhoustonScrapeLinks();
-aarfhoustonScrapePets();
+// aarfhoustonScrapePets();
 // houstonspcaScrapeLinks();
-// houstonspcaScrapePets();
+houstonspcaScrapePets();
 
 //This is a workaround the security issue: 
 /*
@@ -247,7 +309,7 @@ function hbsWorkAround(docs) {
     return arr;
 }
 
-function getPetImages(petImgPath, petURIs){
+function downloadPetImages(petImgPath, petURIs,cb){
     if (petURIs.length < 1) {
         let error = new Error('petURIs Array was empty');
         console.error(error.message);
@@ -258,31 +320,52 @@ function getPetImages(petImgPath, petURIs){
             //This is a new Pet. Create new Folder and download all imgs
             fs.mkdir(petImgPath, { recursive: true }, (err) => {
                 if (err) throw err;
+                const filenames = [];
                 petURIs.forEach((uri) => {
-                    return downloadImg(uri, petImgPath);
+                    downloadImg(uri, petImgPath,(filename)=>{
+                        filenames.push(filename);
+                        if (filenames.length == petURIs.length) {
+                            if (cb) return cb(filenames);
+                        }
+                    });
                 })
             });
         } else { //Pet has been Previously Scraped.
             //check for new Images
-            petURIs.forEach((uri) => {
-                const filename = path.basename(uri);
-                fs.access(`${petImgPath}/${filename}`, (err) => {
-                    //Check if we have this img. If Not => Download it
-                    if (err) {
-                        return downloadImg(uri, petImgPath);
+            const newFilenames = [];
+
+            //Lets do an array with the 
+            fs.readdir(petImgPath, function (err, files) {
+                if (err) throw err;
+
+                petURIs.forEach((uri,i,arr)=>{
+                    const filename = path.basename(uri);
+                    if (!(files.includes(filename))) {
+                        downloadImg(uri, petImgPath, (newFileName) => {
+                            newFilenames.push(newFileName);
+                            console.log("newFilenames",newFilenames);
+                            if ((i + 1) == arr.length) {
+                                if (cb) return cb(newFilenames);
+                            }
+                        });
+                    }else{
+                        if ((i + 1) == arr.length) {
+                            if (cb) return cb(newFilenames);
+                        }
                     }
+
                 })
-            })
+            });
         }
     })
 }
 
-function downloadImg(url,petFolder){
-    console.log('Downloading...', petFolder);
+function downloadImg(url,petFolder,cb){
     // const ext = path.extname(url);
     const filename = path.basename(url);
     const localPath = `${petFolder}/${filename}`;
 
+    console.log('Downloading...', localPath);
     //Save image from External URL.
     https.get(url, function (res) {
         //Validation
@@ -309,7 +392,9 @@ function downloadImg(url,petFolder){
         const file = fs.createWriteStream(localPath);
         res.pipe(file, { end: false });
         res.on('end', () => {
-            file.end(); //can do callback here if needed
+            file.end(()=>{
+                if(cb) return cb(filename);
+            }); 
         });
 
     }).on('error', (e) => {
@@ -318,8 +403,16 @@ function downloadImg(url,petFolder){
 
 }
 
+//Based on Fisher–Yates shuffle algorithm:
+function arrayShuffle(array) {
 
-
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * i);
+        const temp = array[i];
+        [array[i], array[j]] = [array[j], temp];
+    }
+    return array;
+}
 
 
 //Start Server

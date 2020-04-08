@@ -64,11 +64,13 @@ function scrapePets(petLinks,cb){
             const imgsURI = [];
             if (!(typeof ($('#animalMainImage').attr('src')) == "undefined")){
                 //Only push Active Pets with images
-                imgsURI.push($('#animalMainImage').attr('src'));
                 if ($('a[rel="prettyPhoto[pp_gal]"]').length > 0){
                     $('a[rel="prettyPhoto[pp_gal]"]').each((i, elem) => {
                         imgsURI.push($(elem).attr('href'));
                     })
+                    if (!(imgsURI.includes($('#animalMainImage').attr('src')))) {
+                        imgsURI.push($('#animalMainImage').attr('src'));
+                    }
                 }
             }
             

@@ -33,6 +33,9 @@ const petSchema = mongoose.Schema({
         type: String,
         trim: true
     },
+    imgs: {
+        type: [String]
+    },
     status: {
         type: String,
         required: true,
