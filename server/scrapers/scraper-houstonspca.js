@@ -4,13 +4,18 @@ const cheerio = require('cheerio');
 const domain = 'houstonspca.org';
 const petListURI = `https://www.${domain}/adopt/available-pets/?type=Dog&pets-page=`;
 
-//Main Function - Returns an array[objects] with scrapable links
-
+/**
+ * Recursive Function: Returns an array[objects] with scrapable links. Checks for "Next Pages"
+ * @param {Function} cb Callback
+ * @param {String} URI URI with list of pets
+ * @param {Array} cheerioArr Array of cheerio Objects
+ * @param {Number} page Page Number
+ */
 function scrapePetLinks(cb, URI = petListURI,cheerioArr = [], page = 1) {
     // console.log("Search Page:", `${URI}${page}`);
     // console.log('Page:', page);
     cheerioArr = [...cheerioArr];
-    fetchURL(`${URI}${page}`).then(response => {
+    axios.get(`${URI}${page}`).then(response => {
         const $ = cheerio.load(response.data);
         if ($('.card__grid .pet-card').length > 0) { //Check for pets in search page
             cheerioArr.push($);
@@ -32,11 +37,6 @@ function scrapePetLinks(cb, URI = petListURI,cheerioArr = [], page = 1) {
     })
 }
 //scrapePetLinks((pets) => console.log('Pets from scrapePetLinks',pets));
-
-//Fetch the data: gets the HTML of the provided URI
-function fetchURL(URI){
-    return axios.get(URI);
-}
 
 //Returns array of pet objects 
 function getPetLinkList(HTMLbody, bodyFormat = 'html') {
@@ -60,13 +60,17 @@ function getPetLinkList(HTMLbody, bodyFormat = 'html') {
 }
 
 
-//Main Function
+/**
+ * Main Function
+ * @param {Array} petLinks An Array of pet links to scrape pet data
+ * @param {Function} cb Callback Function
+ */
 function scrapePets(petLinks,cb){
     const pets = [];
     let counter = 0;
 
     petLinks.forEach((pet,i,arr) => {
-        fetchURL(pet.petURI).then(response => {
+        axios.get(pet.petURI).then(response => {
             counter++;
             const $ = cheerio.load(response.data);
 
@@ -76,6 +80,7 @@ function scrapePets(petLinks,cb){
             let breed = "";
             let sex = "";
             let age = "";
+            const imgsURI = [];
 
             const petFeatures = $('.img-s__content-col .pet__feature > div');
 
@@ -89,6 +94,12 @@ function scrapePets(petLinks,cb){
                 if ($(feat).text().indexOf('Age:') >= 0) {
                     age = $(feat).text().split('Age:')[1].trim();
                 }
+            });
+
+            const imgElements = $('.pet-slider-single').children();
+            imgElements.each((i, elem) => {
+                const style = $(elem).attr('style');
+                imgsURI.push(style.slice(style.indexOf("http://"), style.indexOf(");")));
             })
 
             const petData = {
@@ -96,15 +107,13 @@ function scrapePets(petLinks,cb){
                 breed,
                 sex,
                 age,
+                imgsURI,
                 petId: pet.petId
-                // pics
             };
             pets.push(petData);
             if (counter == arr.length) return cb(pets);
         })
     })
-
-
 }
 
 module.exports = {

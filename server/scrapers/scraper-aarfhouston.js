@@ -4,17 +4,15 @@ const cheerio = require('cheerio');
 const domain = 'aarfhouston.org';
 const petListURI = `https://www.${domain}/animals/list`;
 
-//Main Function
+/**
+ * Returns an array[Pet Objects] with scrapable links.
+ * @param {Function} cb Callback
+ */
 function scrapePetLinks(cb) {
-    fetchURL(petListURI).then(response => {
+    axios.get(petListURI).then(response => {
         petList = [...getPetLinkList(response.data)];
         return cb(petList);
     })
-}
-
-//Fetch the data: gets the HTML of the provided URI
-function fetchURL(URI){
-    return axios.get(URI);
 }
 
 //Returns array of pet objects 
@@ -51,7 +49,7 @@ function scrapePets(petLinks,cb){
     let counter = 0;
 
     petLinks.forEach((pet,i,arr) => {
-        fetchURL(pet.petURI).then(response => {
+        axios.get(pet.petURI).then(response => {
             counter++;
             const $ = cheerio.load(response.data);
 
@@ -68,7 +66,7 @@ function scrapePets(petLinks,cb){
                     $('a[rel="prettyPhoto[pp_gal]"]').each((i, elem) => {
                         imgsURI.push($(elem).attr('href'));
                     })
-                    if (!(imgsURI.includes($('#animalMainImage').attr('src')))) {
+                    if ( !(imgsURI.includes( $('#animalMainImage').attr('src') )) ) {
                         imgsURI.push($('#animalMainImage').attr('src'));
                     }
                 }

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const https = require('https');
+const http = require('http');
 const path = require('path');
 const express = require('express'); // Routing
 const hbs = require('express-handlebars'); //Templating Engine
@@ -100,7 +101,8 @@ function aarfhoustonScrapePets() {
                             console.log("Pet Inactive:", pet.petId);
                         }
                     ) 
-                }else{
+                }
+                else{
                     Pet.findOneAndUpdate(
                         { petId: pet.petId, domain: domain },
                         {
@@ -176,10 +178,10 @@ function houstonspcaScrapeLinks() {
 }
 
 function houstonspcaScrapePets() {
-    console.log("Start: Method aarfhoustonScrapePets");
-    Pet.find({ domain: "houstonspca.org", status: "Active" }, (err, petLinks) => {
+    console.log("Start: Method houstonspcaScrapePets");
+    const domain = "houstonspca.org";
+    Pet.find({ domain: domain, status: "Active" }, (err, petLinks) => {
         if (err) return console.log(err);
-
 
         scraper_houstonspca.scrapePets(petLinks, (pets) => {
             //if (pets) console.log('We got ', pets.length, ' pets');
@@ -210,9 +212,38 @@ function houstonspcaScrapePets() {
                                 sex: pet.sex
                             }
                         },
-                        (err, pet) => {
+                        (err, doc) => {
                             if (err) return console.log(err);
                             console.log("Pet Updated:", pet.petId);
+
+                            //Get Images
+                            const petImgPath = `${mediaPath}${domain}/${pet.petId}`;
+
+                            console.log(pet.imgstest);
+
+                            //check if folder exists
+                            //if folder does not exist => create and download imgs
+                            //else => download only new images
+                            if (pet.imgsURI.length > 0) downloadPetImages(petImgPath, pet.imgsURI, (filenames) => {
+                                console.log("filenames:", filenames);
+                                let imgFileNames = [];
+                                if ("imgs" in doc) {
+                                    imgFileNames = [...doc.imgs, ...filenames];
+                                } else {
+                                    imgFileNames = [...filenames];
+                                }
+                                Pet.findOneAndUpdate(
+                                    { petId: pet.petId, domain: domain },
+                                    {
+                                        $set: {
+                                            imgs: imgFileNames
+                                        }
+                                    },
+                                    (err, doc) => {
+                                        if (err) return console.log(err);
+                                        console.log("Images Updated for:", pet.petId);
+                                    })
+                            });
                         }
                     )
                 }
@@ -290,7 +321,7 @@ app.get('/search', (req, res) => {
 // aarfhoustonScrapeLinks();
 // aarfhoustonScrapePets();
 // houstonspcaScrapeLinks();
-houstonspcaScrapePets();
+// houstonspcaScrapePets();
 
 //This is a workaround the security issue: 
 /*
@@ -360,14 +391,23 @@ function downloadPetImages(petImgPath, petURIs,cb){
     })
 }
 
+/**
+ * Saves and image from and External URL.
+ * @param {String} url 
+ * @param {String} petFolder 
+ * @param {Function} cb
+ */
 function downloadImg(url,petFolder,cb){
     // const ext = path.extname(url);
     const filename = path.basename(url);
     const localPath = `${petFolder}/${filename}`;
 
     console.log('Downloading...', localPath);
+
+    const protocol = (url.indexOf('https://') >= 0) ? https : http;
+
     //Save image from External URL.
-    https.get(url, function (res) {
+    protocol.get(url, function (res) {
         //Validation
         const { statusCode } = res;
         const contentType = res.headers['content-type'];
