@@ -7,6 +7,12 @@ const petSchema = mongoose.Schema({
         required: true,
         trim: true
     },
+    petUUID: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
     domain: {
         type: String,
         required: true,
@@ -46,4 +52,4 @@ const petSchema = mongoose.Schema({
 const Pet = mongoose.model('Pet', petSchema);
 
 //Export the model
-module.exports = { Pet }
+module.exports = Pet
