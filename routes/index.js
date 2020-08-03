@@ -9,15 +9,17 @@ const { aarfhouston, houstonspca } = require('../scrapers/scrapers')
 
 /* GET home page. */
 router.get('/1', function(req, res, next) {
+  console.log(`--> aarfhouston: Scraping Links Started | ${new Date()}`)
 
   aarfhouston.scrapeLinks((err,petLinks)=>{
-    if(err) return res.end("There was an Error")
+    if (err) return console.log(`--> aarfhouston: Scraping Links Error | ${new Date()}`, err)
 
     const newPetLinks = petLinks.map(async (petLink) =>{
       try {
         return await Pet.create(petLink)
       } catch (error) {
-        // console.log(error)
+        console.log(`--> aarfhouston: Scraping Links Error | ${new Date()}`)
+        console.log(error)
       }
     })
 
@@ -29,17 +31,23 @@ router.get('/1', function(req, res, next) {
         if (cleanNewPetLinks.length > 0) {
           console.log(`--> New Links Added: ${cleanNewPetLinks.length} total`)
         } else {
-          console.log("--> New New Links to Add")
+          console.log("--> No New Links to Add")
         }
 
-        Pet.find({ domain: aarfhouston.domain }, (err, pets) => {
-          if (err) return res.send("Bork! Error...")
+        console.log(`--> aarfhouston: Scraping Links Ended | ${new Date()}`)
 
-          res.send(pets)
-        })
+        // Pet.find({ domain: aarfhouston.domain }, (err, pets) => {
+        //   if (err) return res.send("Bork! Error...")
+
+        //   res.send(pets)
+        // })
 
       })
-      .catch(err => res.end("Bork, Error!"))
+      .catch(err => {
+        console.log(`--> aarfhouston: Scraping Links Error | ${new Date()}`)
+        console.log(err)
+        // res.end("Bork, Error!")
+      })
 
   })
 
@@ -47,6 +55,7 @@ router.get('/1', function(req, res, next) {
 
 
 router.get('/2', function (req, res, next) {
+  console.log(`--> houstonspca: Scraping Links Started | ${new Date()}`)
   
   houstonspca.scrapeLinks((err, petLinks) => {
     if (err) return res.end("There was an Error")
@@ -67,7 +76,7 @@ router.get('/2', function (req, res, next) {
         if (cleanNewPetLinks.length > 0) {
           console.log(`--> New Links Added: ${cleanNewPetLinks.length} total`)
         } else {
-          console.log("--> New New Links to Add")
+          console.log("--> No New Links to Add")
         }
 
         Pet.find({ domain: houstonspca.domain }, (err, pets) => {
