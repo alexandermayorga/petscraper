@@ -1,10 +1,10 @@
 const axios = require('axios').default;
 const cheerio = require('cheerio');
 
-const domain = 'aarfhouston.org';
-
 //DB Models
 const Pet = require('../models/pet');
+
+const domain = 'aarfhouston.org';
 
 /**
  * Scrapes 'aarfhouston.org' for Pet Links
@@ -129,9 +129,89 @@ function parsePetPage(axiosRes) {
 
 }
 
+function fetchLinks (){
+    console.log(`--> aarfhouston: Scraping Links Started | ${new Date()}`)
+
+    scrapeLinks((err, petLinks) => {
+        if (err) return console.log(`--> aarfhouston: Scraping Links Error | ${new Date()}`, err)
+
+        const newPetLinks = petLinks.map(async (petLink) => {
+            try {
+                return await Pet.create(petLink)
+            } catch (error) {
+                if (!(error.code === 11000)){
+                    console.log(`--> aarfhouston: Scraping Links Error | ${new Date()}`)
+                    console.log(error)
+                }
+            }
+        })
+
+        Promise.all(newPetLinks)
+            .then(data => {
+
+                const cleanNewPetLinks = data.filter(d => d != undefined)
+
+                if (cleanNewPetLinks.length > 0) {
+                    console.log(`--> New Links Added: ${cleanNewPetLinks.length} total`)
+                } else {
+                    console.log("--> No New Links to Add")
+                }
+
+                console.log(`--> aarfhouston: Scraping Links Ended | ${new Date()}`)
+
+                // Pet.find({ domain: aarfhouston.domain }, (err, pets) => {
+                //   if (err) return res.send("Bork! Error...")
+
+                //   res.send(pets)
+                // })
+
+            })
+            .catch(err => {
+                console.log(`--> aarfhouston: Scraping Links Error | ${new Date()}`)
+                console.log(err)
+                // res.end("Bork, Error!")
+            })
+
+    })
+}
+
+function fetchPets() {
+    console.log(`--> aarfhouston: Scraping Pets Started | ${new Date()}`)
+    scrapePets((err, petsData) => {
+        if (err) return console.log(`--> aarfhouston: Scraping Pets Error | ${new Date()}`, err)
+
+        const newPetsData = petsData.map(async petData => {
+            try {
+                return await Pet.findOneAndUpdate({ petUUID: petData.petUUID }, petData, { new: true })
+            } catch (error) {
+                console.log(`--> aarfhouston: Scraping Pets Error | ${new Date()}`)
+                console.log(error)
+                // res.send("Bork Bork, Error!")
+            }
+        })
+
+        Promise.all(newPetsData)
+            .then(data => {
+
+                console.log(`--> Pets Updated: ${data.length}`)
+                console.log(`--> aarfhouston: Scraping Pets Ended | ${new Date()}`)
+                // res.send(data)
+
+            })
+            .catch(err => {
+                console.log(`--> aarfhouston: Scraping Pets Error | ${new Date()}`)
+                // res.end("Bork, Error!")
+            })
+
+    })
+}
+
+
 
 module.exports = {
     scrapeLinks,
     scrapePets,
+    fetchLinks,
+    fetchPets,
     domain
 }

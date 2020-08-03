@@ -40,7 +40,35 @@ router.get('/1', function(req, res, next) {
 
 
 router.get('/2', function (req, res, next) {
-  res.send('respond with a resource');
+  console.log(`--> houstonspca: Scraping Pets Started | ${new Date()}`)
+  houstonspca.scrapePets((err,petsData)=>{
+    if (err) return console.log(`--> houstonspca: Scraping Pets Error | ${new Date()}`, err)
+
+    const newPetsData = petsData.map(async petData => {
+      try {
+        return await Pet.findOneAndUpdate({ petUUID: petData.petUUID }, petData, { returnOriginal: false })
+      } catch (error) {
+        console.log(`--> houstonspca: Scraping Pets Error | ${new Date()}`)
+        console.log(error)
+        // res.send("Bork Bork, Error!")
+      }
+    })
+
+    Promise.all(newPetsData)
+      .then(data => {
+
+        console.log(`--> Pets Updated: ${data.length}`)
+        console.log(`--> houstonspca: Scraping Pets Ended | ${new Date()}`)
+        // res.send(data)
+
+      })
+      .catch(err => {
+        console.log(`--> houstonspca: Scraping Pets Error | ${new Date()}`)
+        // res.end("Bork, Error!")
+      })
+
+  })
+  
 });
 
 

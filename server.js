@@ -3,6 +3,25 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose'); //Mongoose - DB util
+const CronJob = require('cron').CronJob;
+const { aarfhouston, houstonspca } = require('./scrapers/scrapers')
+
+if(process.env.NODE_ENV === 'production'){
+    // second minute hour day month day(week)
+    new CronJob('0 0 0 * * *', function () {
+        const d = new Date();
+        console.log('Every 3 minutes:', d);
+        aarfhouston.fetchLinks();
+        houstonspca.fetchLinks();
+    }, null, true, 'America/Chicago');
+
+    new CronJob('0 0 6 * * *', function () {
+        const d = new Date();
+        console.log('Every 30 minutes:', d);
+        aarfhouston.fetchPets();
+        houstonspca.fetchPets();
+    }, null, true, 'America/Chicago');
+}
 
 //DB Config
 mongoose.Promise = global.Promise;
