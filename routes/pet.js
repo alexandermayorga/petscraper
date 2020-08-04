@@ -27,12 +27,12 @@ router.get('/1', function(req, res, next) {
 
         console.log(`--> Pets Updated: ${data.length}`)
         console.log(`--> aarfhouston: Scraping Pets Ended | ${new Date()}`)
-        // res.send(data)
+        res.send(data)
 
       })
       .catch(err => {
         console.log(`--> aarfhouston: Scraping Pets Error | ${new Date()}`)
-        // res.end("Bork, Error!")
+        res.end("Bork, Error!")
       })
 
   })
@@ -59,12 +59,12 @@ router.get('/2', function (req, res, next) {
 
         console.log(`--> Pets Updated: ${data.length}`)
         console.log(`--> houstonspca: Scraping Pets Ended | ${new Date()}`)
-        // res.send(data)
+        res.send(data)
 
       })
       .catch(err => {
         console.log(`--> houstonspca: Scraping Pets Error | ${new Date()}`)
-        // res.end("Bork, Error!")
+        res.end("Bork, Error!")
       })
 
   })

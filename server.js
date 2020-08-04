@@ -9,13 +9,15 @@ const { aarfhouston, houstonspca } = require('./scrapers/scrapers')
 if(process.env.NODE_ENV === 'production'){
     // second minute hour day month day(week)
     new CronJob('0 0 0 * * *', function () {
+        //Runs at midnight
         const d = new Date();
-        console.log('Every 3 minutes:', d);
+        // console.log('Every 3 minutes:', d);
         aarfhouston.fetchLinks();
         houstonspca.fetchLinks();
     }, null, true, 'America/Chicago');
 
     new CronJob('0 0 6 * * *', function () {
+        //Runs at 6am
         const d = new Date();
         console.log('Every 30 minutes:', d);
         aarfhouston.fetchPets();
@@ -34,6 +36,7 @@ mongoose.connect(process.env.DB_URI, {
 
 const indexRouter = require('./routes/index');
 const petRouter = require('./routes/pet');
+const apiRouter = require('./routes/api');
 
 const app = express();
 
@@ -45,5 +48,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/pet', petRouter);
+app.use('/api', apiRouter);
 
 module.exports = app;

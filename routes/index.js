@@ -36,17 +36,17 @@ router.get('/1', function(req, res, next) {
 
         console.log(`--> aarfhouston: Scraping Links Ended | ${new Date()}`)
 
-        // Pet.find({ domain: aarfhouston.domain }, (err, pets) => {
-        //   if (err) return res.send("Bork! Error...")
+        Pet.find({ domain: aarfhouston.domain }, (err, pets) => {
+          if (err) return res.send("Bork! Error...")
 
-        //   res.send(pets)
-        // })
+          res.send(pets)
+        })
 
       })
       .catch(err => {
-        console.log(`--> aarfhouston: Scraping Links Error | ${new Date()}`)
-        console.log(err)
-        // res.end("Bork, Error!")
+        // console.log(`--> aarfhouston: Scraping Links Error | ${new Date()}`)
+        // console.log(err)
+        res.end("Bork, Error!")
       })
 
   })

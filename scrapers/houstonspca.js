@@ -124,7 +124,7 @@ function parsePetPage(axiosRes) {
         status: "Inactive"
     }  //Checking that there is info in the page
 
-    const petName = $('.img-s__content-col .title').text();
+    const name = $('.img-s__content-col .title').text();
     let breed = "";
     let sex = "";
     let age = "";
@@ -152,7 +152,7 @@ function parsePetPage(axiosRes) {
     })
 
     const petData = {
-        petName,
+        name,
         breed,
         sex,
         age,
