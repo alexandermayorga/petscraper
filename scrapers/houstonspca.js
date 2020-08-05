@@ -144,11 +144,13 @@ function parsePetPage(axiosRes) {
         }
     });
 
-    const imgElements = $('.pet-slider-single').children();
+    const imgElements = $('.pet-slider-single .pet-slide-top');
     imgElements.each((i, elem) => {
+        
         const style = $(elem).attr('style');
         //TODO: Some have videos. Maybe will add later
-        if (style) imgs.push(style.slice(style.indexOf("http://"), style.indexOf(");")));
+        if (style) imgs.push(style.slice(style.indexOf("https://"), style.indexOf(");")));
+
     })
 
     const petData = {
