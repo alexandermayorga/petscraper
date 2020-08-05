@@ -4,7 +4,7 @@
   "description": "Web Scrapper - Adoption Sites",
   "main": "server.js",
   "scripts": {
-    "start": "node ./server/bin/www",
+    "start": "node ./bin/www",
     "server": "nodemon -r dotenv/config ./bin/www",
     "client": "cd ./client && npm start",
     "local": "concurrently \"npm run server\" \"npm run client\"",
