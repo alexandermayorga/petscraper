@@ -49,7 +49,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, './client/build')));
 
 app.use('/links', indexRouter);
-app.use('/pet', petRouter);
+app.use('/pets', petRouter);
 app.use('/api', apiRouter);
 
 module.exports = app;

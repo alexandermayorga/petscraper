@@ -5,6 +5,8 @@ import PetCard from './PetCard';
 
 export default function Home() {
     const [pets, setpets] = useState()
+    const [pageYOffset, setPageYOffset] = useState(0)
+    const [pageInnerHeight, setPageInnerHeight] = useState()
 
     useEffect(() => {
         let cancel;
@@ -22,10 +24,17 @@ export default function Home() {
         return () => cancel(); 
     }, [])
 
+    useEffect(() => {
+        setPageInnerHeight(window.innerHeight)
+        window.addEventListener('scroll', e => setPageYOffset(window.pageYOffset))
+        return () => window.removeEventListener('scroll', () => false); 
+    }, [])
+
+
     const showPets = () => {
         return pets.map(pet => (
             <div key={pet._id} className="col-sm-3">
-                <PetCard pet={pet} />
+                <PetCard pet={pet} pageYOffset={pageYOffset} pageHeight={pageInnerHeight}/>
             </div>
         ))
     }
