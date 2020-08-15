@@ -14,7 +14,7 @@ router.get('/pets', async function (req, res, next) {
 });
 
 
-router.get('/search/sex/:sex', async function (req, res, next) {
+router.get('/pets/sex/:sex', async function (req, res, next) {
     const sex = req.params.sex;
 
     try {

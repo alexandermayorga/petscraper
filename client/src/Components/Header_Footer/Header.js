@@ -12,7 +12,7 @@ import logo from '../../Assets/favicon-32x32.png'
 
 export default function Header() {
     return (
-        <div>
+        <div className="mb-4">
             <Navbar color="dark" dark expand="md">
                 <div className="container">
                 <Link to="/">

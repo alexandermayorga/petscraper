@@ -2,16 +2,21 @@ import React, {useState, useEffect} from 'react'
 
 import axios from "axios";
 import PetCard from './PetCard';
+import FilterBar from './FilterBar';
 
 export default function Home() {
     const [pets, setpets] = useState()
+    const [sex, setSex] = useState('all')
     const [pageYOffset, setPageYOffset] = useState(0)
     const [pageInnerHeight, setPageInnerHeight] = useState()
 
     useEffect(() => {
         let cancel;
+        let fetchURI = '/api/pets';
 
-        axios.get('/api/pets', {
+        if (sex !== 'all') fetchURI = `${fetchURI}/sex/${sex}`
+
+        axios.get(fetchURI, {
             cancelToken: new axios.CancelToken(c => cancel = c)
         })
         .then(res => {
@@ -22,7 +27,7 @@ export default function Home() {
         })
         //Cancel Old requests if new requests are made. This way old data doesn't load if old request finishes after new request
         return () => cancel(); 
-    }, [])
+    }, [sex])
 
     useEffect(() => {
         setPageInnerHeight(window.innerHeight)
@@ -39,12 +44,18 @@ export default function Home() {
         ))
     }
 
-    if (!pets) return "Loading..."
 
     return (
         <div className="container">
             <div className="row">
-                {showPets()}
+                <div className="col-sm-12">
+                    <FilterBar filterSex={setSex}/>
+                </div>
+            </div>
+
+            <div className="row">
+                {!pets && "Loading..."}
+                {pets && showPets()}
             </div>
         </div>
     )
