@@ -38,12 +38,11 @@ export default function Home() {
 
     const showPets = () => {
         return pets.map(pet => (
-            <div key={pet._id} className="col-sm-3">
+            <div key={pet._id} className="col-md-6 col-lg-4 col-xl-3">
                 <PetCard pet={pet} pageYOffset={pageYOffset} pageHeight={pageInnerHeight}/>
             </div>
         ))
     }
-
 
     return (
         <div className="container">
@@ -59,4 +58,5 @@ export default function Home() {
             </div>
         </div>
     )
+
 }

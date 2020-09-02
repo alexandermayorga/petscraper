@@ -4,7 +4,7 @@ import Layout from './Components/HOC/Layout'
 import { Switch, Route } from "react-router-dom";
 import Home from './Components/Home';
 
-import './scss/theme.scss';
+import './Assets/scss/main.scss';
 
 const Routes = (props) => {
     return (
