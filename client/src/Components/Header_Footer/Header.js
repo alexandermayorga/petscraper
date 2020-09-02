@@ -6,7 +6,7 @@ import logo from '../../Assets/favicon-32x32.png'
 export default function Header() {
     return (
 
-        <nav className="navbar navbar-expand-sm navbar-dark bg-primary mb-4">
+        <nav className="navbar navbar-expand-sm navbar-dark bg-dark mb-4">
             <div className="container">
             <Link to='/' className="navbar-brand">
                 <img src={logo} width="30" height="30" className="d-inline-block align-top" alt="Logo | The Rescue Park" /> The Rescue Park
