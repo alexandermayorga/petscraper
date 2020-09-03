@@ -23,14 +23,18 @@ export default function PetCard({ pet, pageYOffset, pageHeight}) {
     }
 
     const template = (
-        <div className="card petCard mb-4" style={{ borderColor: pet.sex.indexOf('emale') >= 0 ? "pink" :'#2892CF' }}>
+        <div className="card petCard mb-4">
             <div className={styles.petCard__imgFrame}>
-                <img src={pet.imgs[0] || "https://via.placeholder.com/250x250"} alt={`${pet.name } | ${pet.sex } | ${pet.breed}`} />
+                {pet.imgs[0] ?
+                    <img src={pet.imgs[0]} alt={`${pet.name} | ${pet.sex} | ${pet.breed}`} />
+                    :
+                    <div>No Image Yet 🐶</div>
+                }
             </div>
             <div className="card-body">
                 <div className="card-title h3">{pet.name}</div>
                 <div className="card-subtitle mb-2">
-                    <span class="badge"
+                    <span className="badge"
                         style={{
                             color: pet.sex.indexOf('emale') >= 0 ? "black" : 'white',
                             backgroundColor: pet.sex.indexOf('emale') >= 0 ? "pink" : '#2892CF' }}

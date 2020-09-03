@@ -49,6 +49,8 @@ async function getSearchResultsPages(cb) {
 
         const pagination = $('.post-pagination .page-numbers').filter(':not(.next)')
 
+        if (!pagination.html()) return cb(null,['https://www.houstonspca.org/adopt/available-pets/?type=Dog&pets-page='])
+
         const pageListsLinks = [];
 
         pagination.each((i, item) => {
