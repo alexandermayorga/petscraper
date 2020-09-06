@@ -1,26 +1,8 @@
-import React, {useState, useEffect} from 'react'
+import React from 'react'
 
 import styles from './style.module.scss'
 
-export default function PetCard({ pet, pageYOffset, pageHeight}) {
-    const [cardY, setCardY] = useState()
-    // const [cardBottom, setCardBottom] = useState()
-    // const [cardHeight, setCardHeight] = useState()
-
-    useEffect(()=>{
-        // const card = document.getElementById(`${pet._id}`);
-        // const {y,bottom, height} = card.getBoundingClientRect()
-        // setCardY(y)
-        // setCardBottom(bottom)
-        // setCardHeight(height)
-    },[])
-
-    const classes = ["animate__animated",styles.not_visible]
-
-    if ((pageYOffset + pageHeight) > (cardY + 260)){
-        classes.pop()
-        classes.push("animate__fadeInUp")
-    }
+export default function PetCard({ pet}) {
 
     const template = (
         <div className="card petCard mb-4">
@@ -28,7 +10,7 @@ export default function PetCard({ pet, pageYOffset, pageHeight}) {
                 {pet.imgs[0] ?
                     <img src={pet.imgs[0]} alt={`${pet.name} | ${pet.sex} | ${pet.breed}`} />
                     :
-                    <div>No Image Yet 🐶</div>
+                    <div>No Image Yet <span role="img" aria-label="dog emoji">🐶</span></div>
                 }
             </div>
             <div className="card-body">
@@ -42,7 +24,7 @@ export default function PetCard({ pet, pageYOffset, pageHeight}) {
                 </div>
                 <p className="card-text">{pet.breed}</p>
                 <p className="card-text"><small className="text-muted">{pet.domain}</small></p>
-                <a className="btn btn-dark" href={pet.petURI} target="_blank">View Profile</a>
+                <a className="btn btn-dark" href={pet.petURI} target="_blank" rel="noopener noreferrer">View Profile</a>
             </div>
         </div>
     )
