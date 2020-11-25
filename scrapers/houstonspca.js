@@ -54,8 +54,11 @@ async function getSearchResultsPages(cb) {
         const pageListsLinks = [];
 
         pagination.each((i, item) => {
-            pageListsLinks.push(`https://www.houstonspca.org/adopt/available-pets/?type=Dog&pets-page=${$(item).text().trim()}`)
+            pageListsLinks.push(
+              `https://www.houstonspca.org/adopt/available-pets/?type=Dog&pets-page=${i+1}`
+            );
         })
+        
         return cb(null, pageListsLinks)
 
     } catch (error) {

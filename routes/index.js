@@ -58,6 +58,7 @@ router.get('/2', function (req, res, next) {
   console.log(`--> houstonspca: Scraping Links Started | ${new Date()}`)
   
   houstonspca.scrapeLinks((err, petLinks) => {
+    if (err) console.log(err);
     if (err) return res.end("There was an Error")
 
     const newPetLinks = petLinks.map(async (petLink) => {
