@@ -4,37 +4,45 @@ const router = express.Router();
 //DB Models
 const Pet = require('../models/pet');
 
-router.get('/search', async function (req, res, next) {
-    const breed = decodeURI(req.query.breed).replace(/[.*+?^${}/()|[\]\\]/g, '\\$&');
+router.get('/search', async function (req, res) {
+    const breed = req.query.breed ? decodeURI(req.query.breed).replace(
+      /[.*+?^${}/()|[\]\\]/g,
+      "\\$&"
+    ) : '';
 
-    const size = parseInt(req.query.size) || 20;
-    const offset = parseInt(req.query.offset) || 0;
+    const sex = req.query.sex ? req.query.sex : "all";
+    const size = req.query.size ? parseInt(req.query.size) : 20;
+    const offset = req.query.offset ? parseInt(req.query.offset) : 0;
 
     try {
-        const results = await Pet.find({
-                            status: "Active",
-                            breed: { $regex: '.*' + breed + '.*', $options: 'i' }
-                        }).skip(offset).limit(size);
-        const total = await Pet.countDocuments({
-            status: "Active",
-            breed: { $regex: '.*' + breed + '.*', $options: 'i' }
-        })
 
-        const pages = Math.ceil(total / size);
+      const query = {
+        status: "Active",
+        breed: { $regex: ".*" + breed + ".*", $options: "i" },
+      };
 
-        const data = {
-            total,
-            pages,
-            size,
-            offset,
-            count: results.length,
-            results
-        }
+      if (sex == "male") query["sex"] = { $not: /.*Female.*/ };
+      if (sex == "female") query["sex"] = /.*Female.*/;
 
-        return res.send(data)
-        
+    //   console.log(query);
+
+      const results = await Pet.find(query).skip(offset).limit(size);
+      const total = await Pet.countDocuments(query);
+
+      const pages = Math.ceil(total / size);
+
+      const data = {
+        total,
+        pages,
+        size,
+        offset,
+        count: results.length,
+        results,
+      };
+
+      return res.send(data);
     } catch (error) {
-        // console.log(error)
+        console.log(error)
         return res.status(404).json({ message: "Error! Please note this might be an issue with the server. Please try again." })
     }
 
