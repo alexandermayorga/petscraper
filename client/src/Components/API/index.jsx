@@ -3,10 +3,10 @@ import React from 'react'
 export default function API() {
     return (
         <section style={{ minHeight: "80vh", marginTop: "-1.5rem" }}>
-            <div class="jumbotron jumbotron-fluid bg-primary text-light">
-                <div class="container">
-                    <h1 class="display-4">API</h1>
-                    <p class="lead">API documentation</p>
+            <div className="jumbotron jumbotron-fluid bg-primary text-light">
+                <div className="container">
+                    <h1 className="display-4">API</h1>
+                    <p className="lead">API documentation</p>
                 </div>
             </div>
 

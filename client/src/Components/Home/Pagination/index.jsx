@@ -1,10 +1,10 @@
 import React from 'react'
 
-export default function Pagination({ pages, currentPage, changePage}) {
+export default function Pagination({ pages, currentPage, onPageChange}) {
 
     function onClickHandler(pageNum) {
         window.scrollTo(0, 80)
-        changePage(pageNum)
+        onPageChange(pageNum)
     }
 
     function listPages(pages) {

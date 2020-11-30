@@ -9,7 +9,7 @@ import Shelters from './Components/Shelters';
 
 import './Assets/scss/main.scss';
 
-const Routes = (props) => {
+const Routes = () => {
     return (
         <Layout>
             <Switch>

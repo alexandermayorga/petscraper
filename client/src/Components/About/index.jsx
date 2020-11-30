@@ -3,10 +3,10 @@ import React from 'react'
 export default function About() {
     return (
         <section style={{ minHeight: "80vh", marginTop: "-1.5rem" }}>
-            <div class="jumbotron jumbotron-fluid bg-primary text-light">
-                <div class="container">
-                    <h1 class="display-4">About</h1>
-                    <p class="lead mb-0">Learn about this project</p>
+            <div className="jumbotron jumbotron-fluid bg-primary text-light">
+                <div className="container">
+                    <h1 className="display-4">About</h1>
+                    <p className="lead mb-0">Learn about this project</p>
                 </div>
             </div>
             <div className="container">
@@ -34,7 +34,7 @@ export default function About() {
                                         <p>
                                             Every time an animal is adopted, a space opens up in the shelter or the rescue. So when you adopt a cat or dog, not only are you saving that animal’s life, but you are also opening up a space for another animal’s life to be saved.
                             </p>
-                                    <footer class="blockquote-footer text-right text-light">taken from <cite title="Source Title"><a href="http://" className="text-light">Why Everyone Should “Adopt Don’t Shop”</a></cite></footer>
+                                    <footer className="blockquote-footer text-right text-light">taken from <cite title="Source Title"><a href="http://" className="text-light">Why Everyone Should “Adopt Don’t Shop”</a></cite></footer>
                                 </blockquote>
                             </div>
                         </div>
