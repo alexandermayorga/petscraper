@@ -20,7 +20,6 @@ export default function Home() {
   });
 
   useEffect(() => {
-      console.log('[useEfffect]');
     const { currentPage, sex, queryText } = uriParams;
 
     let fetchURI = `${baseURI}?breed=${queryText}`;
@@ -36,7 +35,6 @@ export default function Home() {
       })
       .then((res) => {
 
-      console.log("[useEfffect] --> Resolved");
         setPetData({
           petList: res.data.results,
           pages: res.data.pages,

@@ -52,4 +52,8 @@ app.use('/links', indexRouter);
 app.use('/pets', petRouter);
 app.use('/api', apiRouter);
 
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "./client/build", "index.html"));
+});
+
 module.exports = app;
