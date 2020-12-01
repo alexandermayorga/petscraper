@@ -20,6 +20,7 @@ export default function Home() {
   });
 
   useEffect(() => {
+      console.log('[useEfffect]');
     const { currentPage, sex, queryText } = uriParams;
 
     let fetchURI = `${baseURI}?breed=${queryText}`;
@@ -34,7 +35,8 @@ export default function Home() {
         cancelToken: new axios.CancelToken((c) => (cancel = c)),
       })
       .then((res) => {
-        // console.log("useEffect[Init] -> Resolved");
+
+      console.log("[useEfffect] --> Resolved");
         setPetData({
           petList: res.data.results,
           pages: res.data.pages,
@@ -48,7 +50,7 @@ export default function Home() {
     return () => cancel();
   }, [uriParams]);
 
-  const handleSearchBoxChange = (newValue) => {
+  const handleSearchFilter = (newValue) => {
     setUriParams((prevState) => {
       return { ...prevState, queryText: newValue, currentPage: 1 };
     });
@@ -63,9 +65,16 @@ export default function Home() {
       return { ...prevState, currentPage: newValue };
     });
   };
+  const handleFiltersReset = () => {
+    setUriParams({
+      currentPage: 1,
+      sex: "all",
+      queryText: "",
+    });
+  };
 
   const { petList, pages, total } = petData;
-  const { currentPage, sex } = uriParams;
+  const { currentPage, sex, queryText } = uriParams;
 
   const showAnimalList = () => {
     return petList.map((pet) => (
@@ -75,15 +84,30 @@ export default function Home() {
     ));
   };
 
+  const noResultsTemplate = (
+    <div className="col">
+      <div className="card mb-4">
+        <div className="card-body p-5 text-muted text-center ">
+          <div className="h3 mb-3">
+            Oh No! There are no results matching your search
+          </div>
+          <p>Maybe try a different keyword like "Terrier"</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="container">
       <div className="row">
         <div className="col-sm-12">
           <FilterBar
             results={total}
-            onSearchBoxChange={handleSearchBoxChange}
+            queryText={queryText}
+            onSearch={handleSearchFilter}
             sexValue={sex}
             onSexFilterChange={handleSexFilterChange}
+            onFiltersReset={handleFiltersReset}
           />
         </div>
       </div>
@@ -92,6 +116,8 @@ export default function Home() {
         {!petList && <div className="col-sm-12">Loading...</div>}
 
         {petList && showAnimalList()}
+
+        {petList && petList.length < 1 && noResultsTemplate}
       </div>
 
       {pages > 1 && (

@@ -1,15 +1,13 @@
-import React, {useRef} from 'react'
+import React, {useState} from 'react'
 
-export default function SearchBox({onChange}) {
-
-    const inputEl = useRef('');
+export default function SearchBox({onSearch,inputText,onChange}) {
 
     const handleKeyPress = (e) => {
-        if (e.key === "Enter") onChange(inputEl.current.value);
+        if (e.key === "Enter") onSearch(inputText);
     }
 
     const handleClick = () =>{
-        onChange(inputEl.current.value)
+        onSearch(inputText)
     }
 
     return (
@@ -19,7 +17,8 @@ export default function SearchBox({onChange}) {
             type="text" 
             placeholder="Search by Breed"
             aria-label="Search by Breed"
-            ref={inputEl}
+            value={inputText}
+            onChange={(e)=>{onChange(e.target.value)}}
             onKeyPress={handleKeyPress}
             />
             <div className="input-group-append">
