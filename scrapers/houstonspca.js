@@ -43,19 +43,19 @@ function scrapeLinks(cb) {
  */
 async function getSearchResultsPages(cb) {
     try {
-        const response = await axios.get('https://www.houstonspca.org/adopt/available-pets/?type=Dog&pets-page=');
+        const response = await axios.get('https://houstonspca.org/available-pets/?status=3&pet-name&type%5B0%5D=Dog&pets-page=1');
 
         const $ = cheerio.load(response.data);
 
-        const pagination = $('.post-pagination .page-numbers').filter(':not(.next)')
+        const pagination = $('.pets-index__pagination .page-numbers').filter(':not(.next)')
 
-        if (!pagination.html()) return cb(null,['https://www.houstonspca.org/adopt/available-pets/?type=Dog&pets-page='])
+        if (!pagination.html()) return cb(null,['https://houstonspca.org/available-pets/?status=3&pet-name&type%5B0%5D=Dog&pets-page=1'])
 
         const pageListsLinks = [];
 
         pagination.each((i, item) => {
             pageListsLinks.push(
-              `https://www.houstonspca.org/adopt/available-pets/?type=Dog&pets-page=${i+1}`
+              `https://houstonspca.org/available-pets/?status=3&pet-name&type%5B0%5D=Dog&pets-page=${i+1}`
             );
         })
         
@@ -74,10 +74,11 @@ async function getSearchResultsPages(cb) {
 function getPetLinkList(HTMLbody) {
     const $ = cheerio.load(HTMLbody);
 
-    const list = $('#main .pets__grid');
+    const list = $('.pets-index__grid');
     const pets = [];
 
-    list.find('.card__grid .pet-card').each((i, card) => {
+    list.find('.pet-card').each((i, card) => {
+        if(!$(card).attr('href')) return;
         const petURI = $(card).attr('href');
         let petId = petURI.split('pet=')[1];
         // if (petId.indexOf('?')) petId = petId.split('?')[0]; // just in case they add any other params in the URL
@@ -172,17 +173,59 @@ function parsePetPage(axiosRes) {
 
 }
 
-function fetchLinks(){
+// function fetchLinks(){
+//     console.log(`--> houstonspca: Scraping Links Started | ${new Date()}`)
+
+//     scrapeLinks((err, petLinks) => {
+//         if (err) return res.end("There was an Error")
+
+//         const newPetLinks = petLinks.map(async (petLink) => {
+//             try {
+//                 return await Pet.create(petLink)
+//             } catch (error) {
+//                 if (!(error.code === 11000)) {
+//                     console.log(`--> houstonspca: Scraping Links Error | ${new Date()}`)
+//                     console.log(error)
+//                 }
+//             }
+//         })
+
+//         Promise.all(newPetLinks)
+//             .then(data => {
+
+//                 const cleanNewPetLinks = data.filter(d => d != undefined)
+
+//                 if (cleanNewPetLinks.length > 0) {
+//                     console.log(`--> New Links Added: ${cleanNewPetLinks.length} total`)
+//                 } else {
+//                     console.log("--> No New Links to Add")
+//                 }
+
+//                 Pet.find({ domain: houstonspca.domain }, (err, pets) => {
+//                     if (err) return res.send("Bork! Error...")
+
+//                     res.send(pets)
+//                 })
+
+//             })
+//             .catch(err => {
+//                 console.log(err);
+//                 res.end("Bork, Error!")
+//             })
+
+//     })
+// }
+function fetchLinks (){
     console.log(`--> houstonspca: Scraping Links Started | ${new Date()}`)
 
     scrapeLinks((err, petLinks) => {
-        if (err) return res.end("There was an Error")
+        if (err) return console.log(`--> houstonspca: Scraping Links Error | ${new Date()}`, err)
 
         const newPetLinks = petLinks.map(async (petLink) => {
             try {
                 return await Pet.create(petLink)
             } catch (error) {
-                if (!(error.code === 11000)) {
+                if (!(error.code === 11000)){
                     console.log(`--> houstonspca: Scraping Links Error | ${new Date()}`)
                     console.log(error)
                 }
@@ -200,17 +243,25 @@ function fetchLinks(){
                     console.log("--> No New Links to Add")
                 }
 
-                Pet.find({ domain: houstonspca.domain }, (err, pets) => {
-                    if (err) return res.send("Bork! Error...")
+                console.log(`--> houstonspca: Scraping Links Ended | ${new Date()}`)
 
-                    res.send(pets)
-                })
+                // Pet.find({ domain: houstonspca.domain }, (err, pets) => {
+                //   if (err) return res.send("Bork! Error...")
+
+                //   res.send(pets)
+                // })
 
             })
-            .catch(err => res.end("Bork, Error!"))
+            .catch(err => {
+                console.log(`--> houstonspca: Scraping Links Error | ${new Date()}`)
+                console.log(err)
+                // res.end("Bork, Error!")
+            })
 
     })
 }
+
+
 
 function fetchPets(){
     console.log(`--> houstonspca: Scraping Pets Started | ${new Date()}`)
