@@ -30,8 +30,8 @@ mongoose.Promise = global.Promise;
 mongoose.connect(process.env.DB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: true,
+    // useFindAndModify: false,
+    // useCreateIndex: true,
 });
 
 const indexRouter = require('./routes/index');
@@ -55,5 +55,5 @@ app.use('/api', apiRouter);
 app.get("*", (req, res) => {
   res.sendFile(path.resolve(__dirname, "./client/build", "index.html"));
 });
-
+houstonspca.fetchLinks();
 module.exports = app;
