@@ -13,11 +13,13 @@ const domain = 'houstonspca.org';
  * @returns Array[ {Object}, ... ]
  */
 function scrapeLinks(cb) {
-    getSearchResultsPages(async (err, pageListsLinks) => {
+    getSearchResultsLinkPages(async (err, pageListsLinks) => {
         if (err) return cb(err)
-        
+
         try {
-            const searchResultPagesHTML = await axios.all(pageListsLinks.map(link => axios.get(link)))
+            const searchResultPagesHTML = await axios.all(
+                pageListsLinks.map(link => axios.get(link))
+            )
 
             const petLinks = []
 
@@ -26,6 +28,7 @@ function scrapeLinks(cb) {
             })
 
             // console.log(petLinks.length)
+            // console.log(petLinks)
 
             return cb(null, petLinks)
 
@@ -41,24 +44,23 @@ function scrapeLinks(cb) {
  * @param {Function} cb - Callback Function
  * @returns Array[ String... ]
  */
-async function getSearchResultsPages(cb) {
+async function getSearchResultsLinkPages(cb) {
     try {
         const response = await axios.get('https://houstonspca.org/available-pets/?status=3&pet-name&type%5B0%5D=Dog&pets-page=1');
 
         const $ = cheerio.load(response.data);
-
         const pagination = $('.pets-index__pagination .page-numbers').filter(':not(.next)')
 
-        if (!pagination.html()) return cb(null,['https://houstonspca.org/available-pets/?status=3&pet-name&type%5B0%5D=Dog&pets-page=1'])
+        if (pagination.length < 1) return cb(null, ['https://houstonspca.org/available-pets/?status=3&pet-name&type%5B0%5D=Dog&pets-page=1'])
 
         const pageListsLinks = [];
 
         pagination.each((i, item) => {
             pageListsLinks.push(
-              `https://houstonspca.org/available-pets/?status=3&pet-name&type%5B0%5D=Dog&pets-page=${i+1}`
+                `https://houstonspca.org/available-pets/?status=3&pet-name&type%5B0%5D=Dog&pets-page=${i + 1}`
             );
         })
-        
+
         return cb(null, pageListsLinks)
 
     } catch (error) {
@@ -78,12 +80,12 @@ function getPetLinkList(HTMLbody) {
     const pets = [];
 
     list.find('.pet-card').each((i, card) => {
-        if(!$(card).attr('href')) return;
+        if (!$(card).attr('href')) return;
         const petURI = $(card).attr('href');
         let petId = petURI.split('pet=')[1];
         // if (petId.indexOf('?')) petId = petId.split('?')[0]; // just in case they add any other params in the URL
         const pet = {
-            petURI: `https://www.${domain}${petURI}`,
+            petURI: `${petURI}`,
             domain,
             petId,
             petUUID: `${domain}-${petId}`
@@ -93,85 +95,18 @@ function getPetLinkList(HTMLbody) {
     return pets;
 }
 
-/**
- * Gets links from the DB and Scrapes 'houstonspca.org' for individual pet data
- * @param {Function} cb - Callback Function
- * @returns Array[ {Pet Object}, ... ]
- */
-async function scrapePets(cb) {
-    try {
-        const petLinks = await Pet.find({
-            domain,
-            status: "Active"
-        })
-
-        const response = await axios.all(petLinks.map(petLink => axios.get(petLink.petURI)))
-
-        const pets = response.map(res => parsePetPage(res))
-        
-        cb(null, pets)
-
-    } catch (error) {
-        console.log(error);
-        cb(error)
-    }
-}
 
 /**
- * Parses the HTML of a Pet Page. Checks for Inactive pets
- * @param {Object} axiosRes - Axios Response Object
- * @returns {Object} Object containg the Pet Data
+ * Get array list of pets to be scraped
+ * We need a function that scrapes a single pet
+ * We need a function that runs previous function, stores data in a new array, and runs again if there are still items in the array list in step 1
  */
-function parsePetPage(axiosRes) {
-    const $ = cheerio.load(axiosRes.data);
 
-    if ($('.img-s__content-col').length < 1) return {
-        petUUID: `${domain}-${axiosRes.config.url.split('pet=')[1].trim()}`,
-        status: "Inactive"
-    }  //Checking that there is info in the page
-
-    const name = $('.img-s__content-col .title').text();
-    let breed = "";
-    let sex = "";
-    let age = "";
-    const imgs = [];
-
-    const petFeatures = $('.img-s__content-col .pet__feature > div');
-
-    petFeatures.each((i, feat) => {
-        if ($(feat).text().indexOf('Breed:') >= 0) {
-            breed = $(feat).text().split('Breed:')[1].trim();
-        }
-        if ($(feat).text().indexOf('Sex:') >= 0) {
-            sex = $(feat).text().split('Sex:')[1].trim();
-        }
-        if ($(feat).text().indexOf('Age:') >= 0) {
-            age = $(feat).text().split('Age:')[1].trim();
-        }
-    });
-
-    const imgElements = $('.pet-slider-single .pet-slide-top');
-    imgElements.each((i, elem) => {
-        
-        const style = $(elem).attr('style');
-        //TODO: Some have videos. Maybe will add later
-        if (style) imgs.push(style.slice(style.indexOf("https://"), style.indexOf(");")));
-
-    })
-
-    const petData = {
-        name,
-        breed,
-        sex,
-        age,
-        imgs,
-        petUUID: `${domain}-${axiosRes.config.url.split('pet=')[1].trim()}`,
-        petId: axiosRes.config.url.split('pet=')[1].trim()
-    };
-
-    return petData;
-
+function repeater(array) {
+    // Do Something to single array item
 }
+
+
 
 // function fetchLinks(){
 //     console.log(`--> houstonspca: Scraping Links Started | ${new Date()}`)
@@ -215,7 +150,7 @@ function parsePetPage(axiosRes) {
 
 //     })
 // }
-function fetchLinks (){
+function fetchLinks() {
     console.log(`--> houstonspca: Scraping Links Started | ${new Date()}`)
 
     scrapeLinks((err, petLinks) => {
@@ -225,7 +160,7 @@ function fetchLinks (){
             try {
                 return await Pet.create(petLink)
             } catch (error) {
-                if (!(error.code === 11000)){
+                if (!(error.code === 11000)) {
                     console.log(`--> houstonspca: Scraping Links Error | ${new Date()}`)
                     console.log(error)
                 }
@@ -262,8 +197,7 @@ function fetchLinks (){
 }
 
 
-
-function fetchPets(){
+function fetchPets() {
     console.log(`--> houstonspca: Scraping Pets Started | ${new Date()}`)
     scrapePets((err, petsData) => {
         if (err) return console.log(`--> houstonspca: Scraping Pets Error | ${new Date()}`, err)
@@ -290,13 +224,120 @@ function fetchPets(){
                 console.log(`--> houstonspca: Scraping Pets Error | ${new Date()}`)
                 // res.end("Bork, Error!")
             })
-
     })
 }
 
+/**
+ * Gets links from the DB and Scrapes 'houstonspca.org' for individual pet data
+ * @param {Function} cb - Callback Function
+ * @returns Array[ {Pet Object}, ... ]
+ */
+async function scrapePets(cb) {
+    try {
+        const petLinks = await Pet.find({
+            domain,
+            status: "Active"
+        })
+
+        const pets = await scrapeSinglePetLoop(petLinks)
+
+        cb(null, pets)
+
+    } catch (error) {
+        console.log(error);
+        cb(error)
+    }
+}
+
+/**
+ * Iterative function to reduce an array of Pet links. It Scrapes a single Pet page until reaching the end of array.
+ * This is a workaround to the 429 error (Too many requests)
+ * @param {Array} dbPetsArray an Array of Pet Objects from DB
+ */
+async function scrapeSinglePetLoop(dbPetsArray, resultsArray = [], index = 1) {
+    try {
+        if(!Array.isArray(dbPetsArray)) return [];
+        if(index > dbPetsArray.length) return resultsArray;
+
+        //TODO make sure we get an array. Otherwise just exit fn
+        const petToScrape = dbPetsArray[index-1]
+
+        const axiosResponse = await axios.get(petToScrape.petURI)
+
+        resultsArray.push(parsePetPage(axiosResponse, petToScrape))
+        
+        return scrapeSinglePetLoop(dbPetsArray, resultsArray, index+1);
+
+    } catch (error) {
+        console.log(error)
+    }
+
+}
+
+/**
+ * Parses the HTML of a Pet Page. Checks for Inactive pets
+ * @param {Object} axiosRes - Axios Response Object
+ * @returns {Object} Object containg the Pet Data
+ */
+function parsePetPage(axiosRes, petDataToScrape) {
+    const $ = cheerio.load(axiosRes.data);
+
+    if ($('.pet__name').contents().length < 1) return {
+        petUUID: petDataToScrape.petUUID,
+        status: "Inactive"
+    }  //Checking that there is info in the page
+
+    const name = $('.pet__name').text().trim();
+    let breed = "";
+    let sex = "";
+    let age = "";
+    const imgs = [];
+
+    const petFeatures = $('.pets-single__right .pet__feature .pet__feature__row');
+
+    petFeatures.each((i, feat) => {
+        // console.log($(feat).text())
+        if ($(feat).text().indexOf('Breed:') >= 0) {
+            breed = $(feat).text().split('Breed:')[1].trim();
+            // console.log(breed)
+        }
+        if ($(feat).text().indexOf('Sex:') >= 0) {
+            sex = $(feat).text().split('Sex:')[1].trim();
+            // console.log(sex)
+        }
+        if ($(feat).text().indexOf('Age:') >= 0) {
+            age = $(feat).text().split('Age:')[1].trim();
+            // console.log(age)
+        }
+    });
+
+    const imgElements = $('.pet-slider .pet-slide');
+    imgElements.each((i, elem) => {
+        // console.log($(elem).attr('src'))
+        // const style = $(elem).attr('style');
+        // //TODO: Some have videos. Maybe will add later
+        // if (style) imgs.push(style.slice(style.indexOf("https://"), style.indexOf(");")));
+        imgs.push($(elem).attr('src'));
+
+    })
+
+    const petData = {
+        name,
+        breed,
+        sex,
+        age,
+        imgs,
+        petUUID: `${domain}-${axiosRes.config.url.split('pet=')[1].trim()}`,
+        petId: axiosRes.config.url.split('pet=')[1].trim()
+    };
+
+    return petData;
+
+}
+
 module.exports = {
-    scrapeLinks, 
-    domain, 
+    scrapeLinks,
+    domain,
     scrapePets,
     fetchLinks,
     fetchPets
