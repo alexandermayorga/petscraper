@@ -282,7 +282,7 @@ async function scrapeSinglePetLoop(dbPetsArray, resultsArray = [], index = 1) {
 function parsePetPage(axiosRes, petDataToScrape) {
     const $ = cheerio.load(axiosRes.data);
 
-    if ($('.pet__name').contents().length < 1) return {
+    if ($('.pet__name').text().trim().length < 1) return {
         petUUID: petDataToScrape.petUUID,
         status: "Inactive"
     }  //Checking that there is info in the page
