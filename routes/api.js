@@ -4,6 +4,12 @@ const router = express.Router();
 //DB Models
 const Pet = require('../models/pet');
 
+/**
+ * sex
+ * size
+ * offset
+ * breed
+ */
 router.get('/search', async function (req, res) {
     const breed = req.query.breed ? decodeURI(req.query.breed).replace(
       /[.*+?^${}/()|[\]\\]/g,

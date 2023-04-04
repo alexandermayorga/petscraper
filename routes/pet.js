@@ -7,6 +7,7 @@ const Pet = require('../models/pet');
 const { aarfhouston, houstonspca } = require('../scrapers/scrapers')
 
 /* GET users listing. */
+//aarfhouston
 router.get('/1', function(req, res, next) {
   console.log(`--> aarfhouston: Scraping Pets Started | ${new Date()}`)
   aarfhouston.scrapePets((err, petsData)=>{
@@ -38,7 +39,7 @@ router.get('/1', function(req, res, next) {
   })
 });
 
-
+//houstonspca
 router.get('/2', function (req, res, next) {
   console.log(`--> houstonspca: Scraping Pets Started | ${new Date()}`)
   houstonspca.scrapePets((err,petsData)=>{
