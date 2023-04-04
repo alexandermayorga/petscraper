@@ -97,7 +97,7 @@ function parsePetPage(axiosRes) {
         status: "Inactive"
     } 
 
-    const name = $('#layoutMainContent .pageCenterTitle').html().split("&apos;")[0];
+    const name = $('#layoutMainContent .pageCenterTitle').html().replace("'s Web Page","");
     const breed = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[0].trim();
     const sex = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[2].trim();
     const age = $('#layoutMainContent .pageCenterTitle + p').text().split(':')[4].trim();
