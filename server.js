@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors')
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -6,7 +7,7 @@ const mongoose = require('mongoose'); //Mongoose - DB util
 const CronJob = require('cron').CronJob;
 const { aarfhouston, houstonspca } = require('./scrapers/scrapers')
 
-if(process.env.NODE_ENV === 'production'){
+if (process.env.NODE_ENV === 'production') {
     // second minute hour day month day(week)
     new CronJob('0 0 0 * * *', function () {
         //Runs at midnight
@@ -19,7 +20,7 @@ if(process.env.NODE_ENV === 'production'){
     new CronJob('0 0 6 * * *', function () {
         //Runs at 6am
         const d = new Date();
-        console.log('Every 30 minutes:', d);
+        // console.log('Every 30 minutes:', d);
         aarfhouston.fetchPets();
         houstonspca.fetchPets();
     }, null, true, 'America/Chicago');
@@ -34,7 +35,7 @@ mongoose.connect(process.env.DB_URI, {
     // useCreateIndex: true,
 });
 
-const indexRouter = require('./routes/index');
+const linksRouter = require('./routes/links');
 const petRouter = require('./routes/pet');
 const apiRouter = require('./routes/api');
 
@@ -48,18 +49,17 @@ app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, './client/build')));
 
-app.use('/links', indexRouter);
+app.use('/links', linksRouter);
 app.use('/pets', petRouter);
-app.use('/api', apiRouter);
+app.use('/api', cors({ origin: /(localhost)./ }), apiRouter);
 
 app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "./client/build", "index.html"));
+    res.sendFile(path.resolve(__dirname, "./client/build", "index.html"));
 });
 
 // aarfhouston.fetchLinks();
 // aarfhouston.fetchPets();
 // houstonspca.fetchLinks();
 // houstonspca.fetchPets();
-
 
 module.exports = app;
