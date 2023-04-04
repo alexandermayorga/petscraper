@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"marquee.widgets.npm-stats.packageNames": [
+			"pet_scrapper"
+		],
+		"workbench.colorCustomizations": {
+			"activityBar.activeBackground": "#90ad61",
+			"activityBar.background": "#90ad61",
+			"activityBar.foreground": "#15202b",
+			"activityBar.inactiveForeground": "#15202b99",
+			"activityBarBadge.background": "#eaf0f4",
+			"activityBarBadge.foreground": "#15202b",
+			"commandCenter.border": "#15202b99",
+			"sash.hoverBorder": "#90ad61",
+			"statusBar.background": "#76904b",
+			"statusBar.foreground": "#15202b",
+			"statusBarItem.hoverBackground": "#5b6e3a",
+			"statusBarItem.remoteBackground": "#76904b",
+			"statusBarItem.remoteForeground": "#15202b",
+			"titleBar.activeBackground": "#76904b",
+			"titleBar.activeForeground": "#15202b",
+			"titleBar.inactiveBackground": "#76904b99",
+			"titleBar.inactiveForeground": "#15202b99"
+		},
+		"peacock.color": "#76904b"
+	}
+}
