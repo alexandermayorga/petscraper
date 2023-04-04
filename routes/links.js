@@ -8,6 +8,7 @@ const { aarfhouston, houstonspca } = require('../scrapers/scrapers')
 
 
 /* GET home page. */
+// aarfhouston
 router.get('/1', function(req, res, next) {
   console.log(`--> aarfhouston: Scraping Links Started | ${new Date()}`)
 
@@ -53,7 +54,7 @@ router.get('/1', function(req, res, next) {
 
 });
 
-
+//houstonspca
 router.get('/2', function (req, res, next) {
   console.log(`--> houstonspca: Scraping Links Started | ${new Date()}`)
   
