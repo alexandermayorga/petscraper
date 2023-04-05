@@ -51,7 +51,7 @@ app.use(express.static(path.join(__dirname, './client/build')));
 
 app.use('/links', linksRouter);
 app.use('/pets', petRouter);
-app.use('/api', cors({ origin: /(localhost)./ }), apiRouter);
+app.use('/api', cors({ origin: [/(localhost)./,'https://petscraper-client.vercel.app'] }), apiRouter);
 
 app.get("*", (req, res) => {
     res.sendFile(path.resolve(__dirname, "./client/build", "index.html"));
