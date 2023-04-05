@@ -47,15 +47,15 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(express.static(path.join(__dirname, './client/build')));
+// app.use(express.static(path.join(__dirname, './client/build')));
 
 app.use('/links', linksRouter);
 app.use('/pets', petRouter);
 app.use('/api', cors({ origin: [/(localhost)./,'https://petscraper-client.vercel.app'] }), apiRouter);
 
-app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "./client/build", "index.html"));
-});
+// app.get("*", (req, res) => {
+//     res.sendFile(path.resolve(__dirname, "./client/build", "index.html"));
+// });
 
 // aarfhouston.fetchLinks();
 // aarfhouston.fetchPets();
