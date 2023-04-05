@@ -61,6 +61,7 @@ typings/
 .next
 
 /old
+/out/
 
 .vscode
 project-scope.txt
