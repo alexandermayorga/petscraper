@@ -39,6 +39,14 @@ const petSchema = mongoose.Schema({
         type: String,
         trim: true
     },
+    slug: {
+        type: String,
+        trim: true
+    },
+    extraInfo: {
+        type: String,
+        trim: true
+    },
     imgs: {
         type: [String]
     },

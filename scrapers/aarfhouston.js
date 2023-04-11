@@ -115,6 +115,10 @@ function parsePetPage(axiosRes) {
         }
     }
 
+    const extraInfo = $('#animalDetailsAbout').prop('outerHTML').replaceAll("\n","").replaceAll('href="/info/adoption"',`href="//${domain}/info/adoption"`);
+    const petId = axiosRes.config.url.split('AnimalID=')[1].trim()
+    const slug = `${name}-${breed}-${sex}-${age}-${domain}-${petId}`.toLowerCase().replaceAll(" ","-");
+
     const petData = {
         name,
         breed,
@@ -122,7 +126,9 @@ function parsePetPage(axiosRes) {
         age,
         imgs,
         petUUID: `${domain}-${axiosRes.config.url.split('AnimalID=')[1].trim()}`,
-        petId: axiosRes.config.url.split('AnimalID=')[1].trim()
+        petId,
+        extraInfo,
+        slug
     };
 
     return petData

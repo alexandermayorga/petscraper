@@ -321,6 +321,10 @@ function parsePetPage(axiosRes, petDataToScrape) {
 
     })
 
+    const extraInfo = $('.pet__text.small-content-area').text().trim()
+    const petId = axiosRes.config.url.split('pet=')[1].trim()
+    const slug = `${name}-${breed}-${sex}-${age}-${domain}-${petId}`.toLowerCase().replaceAll(" ","-");
+
     const petData = {
         name,
         breed,
@@ -328,7 +332,9 @@ function parsePetPage(axiosRes, petDataToScrape) {
         age,
         imgs,
         petUUID: `${domain}-${axiosRes.config.url.split('pet=')[1].trim()}`,
-        petId: axiosRes.config.url.split('pet=')[1].trim()
+        petId,
+        extraInfo,
+        slug
     };
 
     return petData;
