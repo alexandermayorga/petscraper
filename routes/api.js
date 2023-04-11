@@ -126,5 +126,17 @@ router.get('/animals/id/:id', async function (req, res, next) {
     }
 });
 
+router.get('/animals/slug/:slug', async function (req, res, next) {
+    const slug = req.params.slug;
+
+    if (!slug) return res.end('Error. Argument "slug" missing from API call')
+
+    try {
+        const result = await Pet.findOne({ slug });
+        res.send(result)
+    } catch (error) {
+        res.status(404).json({ message: "Error! Please note this might be an issue with the server. Please try again." })
+    }
+});
 
 module.exports = router;
