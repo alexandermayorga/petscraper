@@ -12,8 +12,8 @@ const Pet = require('../models/pet');
  */
 router.get('/search', async function (req, res) {
     const breed = req.query.breed ? decodeURI(req.query.breed).replace(
-      /[.*+?^${}/()|[\]\\]/g,
-      "\\$&"
+        /[.*+?^${}/()|[\]\\]/g,
+        "\\$&"
     ) : '';
 
     const sex = req.query.sex ? req.query.sex : "all";
@@ -22,31 +22,31 @@ router.get('/search', async function (req, res) {
 
     try {
 
-      const query = {
-        status: "Active",
-        breed: { $regex: ".*" + breed + ".*", $options: "i" },
-      };
+        const query = {
+            status: "Active",
+            breed: { $regex: ".*" + breed + ".*", $options: "i" },
+        };
 
-      if (sex == "male") query["sex"] = { $not: /.*Female.*/ };
-      if (sex == "female") query["sex"] = /.*Female.*/;
+        if (sex == "male") query["sex"] = { $not: /.*Female.*/ };
+        if (sex == "female") query["sex"] = /.*Female.*/;
 
-    //   console.log(query);
+        //   console.log(query);
 
-      const results = await Pet.find(query).skip(offset).limit(size);
-      const total = await Pet.countDocuments(query);
+        const results = await Pet.find(query).skip(offset).limit(size);
+        const total = await Pet.countDocuments(query);
 
-      const pages = Math.ceil(total / size);
+        const pages = Math.ceil(total / size);
 
-      const data = {
-        total,
-        pages,
-        size,
-        offset,
-        count: results.length,
-        results,
-      };
+        const data = {
+            total,
+            pages,
+            size,
+            offset,
+            count: results.length,
+            results,
+        };
 
-      return res.send(data);
+        return res.send(data);
     } catch (error) {
         console.log(error)
         return res.status(404).json({ message: "Error! Please note this might be an issue with the server. Please try again." })
@@ -62,7 +62,7 @@ router.get('/animals/', async function (req, res, next) {
         const results = await Pet.find({ status: "Active" }).skip(offset).limit(size);
         const total = await Pet.countDocuments({ status: "Active" });
         const pages = Math.ceil(total / size);
-        
+
         const data = {
             total,
             pages,
@@ -94,10 +94,10 @@ router.get('/animals/sex/:sex', async function (req, res, next) {
         }
         if (sex == "female") {
             results = await Pet.find({ status: "Active", sex: /.*Female.*/ }).skip(offset).limit(size)
-            total = await Pet.countDocuments({ status: "Active", sex: /.*Female.*/ }); 
+            total = await Pet.countDocuments({ status: "Active", sex: /.*Female.*/ });
             pages = Math.ceil(total / size);
         }
-        
+
         const data = {
             total,
             pages,
@@ -108,6 +108,19 @@ router.get('/animals/sex/:sex', async function (req, res, next) {
         }
 
         res.send(data)
+    } catch (error) {
+        res.status(404).json({ message: "Error! Please note this might be an issue with the server. Please try again." })
+    }
+});
+
+router.get('/animals/id/:id', async function (req, res, next) {
+    const id = req.params.id;
+
+    if (!id) return res.end('Error. Argument "id" missing from API call')
+
+    try {
+        const result = await Pet.findById(id)
+        res.send(result)
     } catch (error) {
         res.status(404).json({ message: "Error! Please note this might be an issue with the server. Please try again." })
     }
