@@ -41,7 +41,8 @@ const petSchema = mongoose.Schema({
     },
     slug: {
         type: String,
-        trim: true
+        trim: true,
+        unique: true,
     },
     extraInfo: {
         type: String,
