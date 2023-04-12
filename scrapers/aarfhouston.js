@@ -117,7 +117,7 @@ function parsePetPage(axiosRes) {
 
     const extraInfo = $('#animalDetailsAbout').prop('outerHTML').replaceAll("\n","").replaceAll('href="/info/adoption"',`href="//${domain}/info/adoption"`);
     const petId = axiosRes.config.url.split('AnimalID=')[1].trim()
-    const slug = `${name}-${breed}-${sex}-${age}-${domain}-${petId}`.toLowerCase().replaceAll(" ","-");
+    const slug = `${name}-${breed.replaceAll(' ','-').replaceAll('/','')}-${sex}-${age}-${domain}-${petId}`.toLowerCase().replaceAll(" ","-");
 
     const petData = {
         name,
